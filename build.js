@@ -156,46 +156,53 @@ function calc(){
 /* ---------- 渲染:舞台 ---------- */
 const stage = () => $('#bStage');
 function F(sid, slot){ return MAN[sid] && MAN[sid][slot] ? MAN[sid][slot][2] : null; }
-/* 按接口实测数据逐件对位:颈口、肩线、髋部都以零件本身的轮廓为准,保证严丝合缝 */
+/* 接口对位:每套零件由 SIFT 匹配回整机原图,得到「零件缩放 + 插头位置 + 躯干上的插座位置」。
+   混搭时:插座取自当前躯干(它决定手臂、腿、头接在哪),插头取自零件自己(它决定零件哪一点接上去),
+   缩放各按本系列在原图里的真实比例,所以头、手、腿天然与躯干匹配。 */
+let RIG = null;
+const HF = 1320;                                   // 原图整机高度映射到舞台的像素
+const ru = (sid, s) => s * HF / RIG[sid].torso.fh;  // 零件像素 → 舞台像素
 function layout(){
-  const out = {}, CX = 500, YT = 300, Ht = 430;
-  const tp = eq.torso && PARTS[eq.torso], tsid = tp ? tp.sid : 'gen', tf = F(tsid, 'torso'), td = MAN[tsid].torso;
-  const st = Ht / td[1], tw = td[0] * st;
-  if (tp) out.torso = { x: CX - tf.neckX * st, y: YT, w: tw, h: Ht, z: 5 };
+  const out = {}, CX = 500;
   const pk = s => eq[s] && PARTS[eq[s]];
-  const h = pk('head');
-  let hc = { y: YT - 40, h: 0 };
-  if (h){
-    const d = MAN[h.sid].head, tdh = MAN[h.sid].torso || td, twh = tdh[0] * Ht / tdh[1];
-    let s0 = .5 * Ht / d[1]; if (d[0] * s0 > 1.05 * twh) s0 = 1.05 * twh / d[0]; if (d[0] * s0 < .62 * twh) s0 = Math.min(.62 * twh / d[0], .62 * Ht / d[1]);
-    const sh = (d[0] * s0 / twh) * ({ gen: 1.12 }[h.sid] || 1) * tw / d[0];
-    const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + (.075 + ({ havoc: .16, gen: .04, abyss: .03 }[tsid] || 0)) * Ht;
-    out.head = { x: CX - F(h.sid, 'head').colX * sh, y: yb - hh, w: hw, h: hh, z: 8 }; hc = { y: yb - hh, h: hh };
+  const tp = pk('torso'), tsid = tp ? tp.sid : 'gen', rt = RIG[tsid];
+  const tu = ru(tsid, rt.torso.s), tw = rt.torso.w * tu, th = rt.torso.h * tu;
+  const tx = CX - tw / 2, ty = 60 + rt.torso.t0 * HF;
+  if (tp) out.torso = { cx: tx + tw / 2, cy: ty + th / 2, w: tw, h: th, a: 0, z: 5 };
+  const put = (slot, z, rot) => {
+    const p = pk(slot); if (!p) return;
+    const rp = RIG[p.sid] && RIG[p.sid][slot]; if (!rp) return;
+    const sk = (rt[slot] && rt[slot].sock) || RIG._avg[slot];
+    const u = ru(p.sid, rp.s), w = rp.pw * u, h = rp.ph * u;
+    let Wx = tx + sk[0] * tw; const Wy = ty + sk[1] * th;        // 躯干上的插座
+    if (slot.startsWith('arm') && p.sid !== tsid && rt[slot] && rt[slot].ie != null && rp.ie != null){
+      // 内缘对齐:异系手臂的内侧边,贴到躯干自带手臂的内侧边(肩甲宽窄不同也不会脱开)
+      const ieA = rt[slot].ie * ru(tsid, rt[slot].s), ieB = rp.ie * u;
+      Wx += slot === 'armL' ? (ieB - ieA) : (ieA - ieB);
+    }
+    const lx = rp.p[0] * u, ly = rp.p[1] * u;                    // 零件上的插头
+    const a = rot ? rp.a : 0, r = a * Math.PI / 180, dx = w / 2 - lx, dy = h / 2 - ly;
+    out[slot] = { cx: Wx + dx * Math.cos(r) - dy * Math.sin(r), cy: Wy + dx * Math.sin(r) + dy * Math.cos(r), w, h, a, z };
+  };
+  put('legL', 3, true); put('legR', 3, true); put('armL', 6, true); put('armR', 6, true); put('head', 8, false); put('weapon', 7, false);
+  // 整体适配舞台:过大时等比缩小,超出边界时平移
+  const ks = Object.keys(out);
+  if (ks.length){
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const k of ks){ const g = out[k]; x0 = Math.min(x0, g.cx - g.w / 2); x1 = Math.max(x1, g.cx + g.w / 2); y0 = Math.min(y0, g.cy - g.h / 2); y1 = Math.max(y1, g.cy + g.h / 2); }
+    const k = Math.min(1, 1330 / (y1 - y0), 960 / (x1 - x0)), Y0 = Math.max(40, Math.min(y0, 1360 - (y1 - y0) * k));
+    const nx0 = 500 + (x0 - 500) * k, nx1 = 500 + (x1 - 500) * k, dx = nx0 < 20 ? 20 - nx0 : (nx1 > 980 ? 980 - nx1 : 0);
+    for (const q of ks){ const g = out[q]; g.cx = 500 + (g.cx - 500) * k + dx; g.cy = Y0 + (g.cy - y0) * k; g.w *= k; g.h *= k; }
   }
-  const hipW = (tf.hipR - tf.hipL) * st;
-  const legs = ['legL', 'legR'].filter(k => pk(k)), tops = legs.map(k => F(pk(k).sid, k).topW);
-  const sLeg0 = legs.length ? hipW / (2 * tops.reduce((a, b) => a + b, 0) / tops.length) : 1;
-  for (const k of legs){
-    const p = pk(k), d = MAN[p.sid][k], f = F(p.sid, k);
-    const lh = Math.max(1.6 * Ht, Math.min(1.85 * Ht, d[1] * sLeg0 * 1.2)), s = lh / d[1], side = k === 'legL' ? 1 : -1;
-    out[k] = { x: CX + side * (f.topW * s * .5 - 2) - f.topX * s, y: YT + .66 * Ht, w: d[0] * s, h: lh, z: 3 };
-  }
-  for (const k of ['armL', 'armR']){
-    const p = pk(k); if (!p) continue;
-    const d = MAN[p.sid][k], f = F(p.sid, k), s = Ht / d[1], side = k === 'armL' ? 1 : -1;
-    const edge = side > 0 ? tf.shR : tf.shL, ex = CX + side * Math.abs(edge - tf.neckX) * st, inner = side > 0 ? f.x0 : f.x1;
-    out[k] = { x: ex - side * .08 * tw - inner * s, y: YT + .02 * Ht, w: d[0] * s, h: d[1] * s, z: 6 };
-  }
-  const wp = pk('weapon');
-  if (wp){ const d = MAN[wp.sid].weapon, hh = 1.7 * Ht, ww = d[0] / d[1] * hh; out.weapon = { x: 70, y: 1365 - hh, w: ww, h: hh, z: 7 }; }
+  const T = out.torso || { cx: 500, cy: 500, w: tw, h: th }, H = out.head;
   const wg = pk('wings');
-  if (wg){ const d = MAN[wg.sid].wings; let hh = 1.3 * Ht, ww = d[0] / d[1] * hh; if (ww > 980){ ww = 980; hh = ww * d[1] / d[0]; }
-    out.wings = { x: CX - ww / 2, y: YT + .42 * Ht - hh / 2, w: ww, h: hh, z: 2 }; }
+  if (wg){ const d = MAN[wg.sid].wings; let hh = 1.3 * T.h, ww = d[0] / d[1] * hh; if (ww > 980){ ww = 980; hh = ww * d[1] / d[0]; }
+    out.wings = { cx: T.cx, cy: T.cy - T.h * .08, w: ww, h: hh, a: 0, z: 2 }; }
   const ha = pk('halo');
-  if (ha){ const d = MAN[ha.sid][ha.slot];
-    if (ha.slot === 'halo2'){ const hh = 1000, ww = d[0] / d[1] * hh; out.halo = { x: CX - ww / 2, y: 140, w: ww, h: hh, z: 0 }; }
-    else { let hh = 1.0 * Ht, ww = d[0] / d[1] * hh; if (ww > 560){ ww = 560; hh = ww * d[1] / d[0]; }
-      out.halo = { x: CX - ww / 2, y: hc.y + hc.h * .5 - hh / 2, w: ww, h: hh, z: 1 }; } }
+  if (ha){ const d = MAN[ha.sid][ha.slot], hy = H ? H.cy : T.cy - T.h * .45;
+    if (ha.slot === 'halo2'){ const hh = 1000, ww = d[0] / d[1] * hh; out.halo = { cx: T.cx, cy: 640, w: ww, h: hh, a: 0, z: 0 }; }
+    else { let hh = 1.0 * T.h, ww = d[0] / d[1] * hh; if (ww > 560){ ww = 560; hh = ww * d[1] / d[0]; }
+      out.halo = { cx: T.cx, cy: hy, w: ww, h: hh, a: 0, z: 1 }; } }
   return out;
 }
 const cdn = p => (window.ORION_CDN || '') + p;
@@ -218,7 +225,7 @@ function renderStage(anim){
     const d = FULL[ps]; let h = 1340, w = d[0] / d[1] * h; if (w > 980){ w = 980; h = w * d[1] / d[0]; }
     if (!full){ full = document.createElement('img'); full.className = 'bfull'; full.draggable = false; host.appendChild(full); }
     if (full.dataset.sid !== ps){ full.dataset.sid = ps; full.src = cdn(`assets/full/${ps}.webp`); full.onerror = () => { full.onerror = null; full.src = `assets/full/${ps}.webp`; }; full.alt = ps; }
-    full.style.cssText = `left:${500 / 10}%;top:${700 / 14}%;width:${w / 10}%;height:${h / 14}%;z-index:5`;
+    full._g = { cx: 500, cy: 700, w, h, a: 0, z: 5 }; full.style.cssText = `left:${500 / 10}%;top:${700 / 14}%;width:${w / 10}%;height:${h / 14}%;z-index:5`;
     document.querySelectorAll('#bHit .hz').forEach(h2 => { h2.classList.toggle('filled', !!eq[h2.dataset.slot]); h2.classList.toggle('sel', h2.dataset.slot === sel); });
     return;
   }
@@ -235,7 +242,7 @@ function renderStage(anim){
       img.src = cdn(`assets/parts/${p.sid}/${p.slot}.webp`); img.onerror = () => { img.onerror = null; img.src = `assets/parts/${p.sid}/${p.slot}.webp`; }; host.appendChild(img);
     }
     const g = L[slot];
-    img.style.cssText = `left:${(g.x + g.w / 2) / 10}%;top:${(g.y + g.h / 2) / 14}%;width:${g.w / 10}%;height:${g.h / 14}%;z-index:${g.z}`;
+    img._g = g; img.style.cssText = `left:${g.cx / 10}%;top:${g.cy / 14}%;width:${g.w / 10}%;height:${g.h / 14}%;z-index:${g.z};rotate:${g.a || 0}deg;transform-origin:0 0`;
   }
   document.querySelectorAll('#bHit .hz').forEach(h => {
     h.classList.toggle('filled', !!eq[h.dataset.slot]); h.classList.toggle('sel', h.dataset.slot === sel);
@@ -313,8 +320,8 @@ function savePng(){
   const load = i => new Promise(res => { const m = new Image(); m.crossOrigin = 'anonymous'; m.onload = () => res(m); m.onerror = () => { const n = new Image(); n.onload = () => res(n); n.onerror = () => res(null); n.src = i.getAttribute('src').replace(/^https?:\/\/[^@]+@main\//, ''); }; m.src = i.currentSrc || i.src; });
   Promise.all(imgs.map(load)).then(ms => {
     imgs.map((i, k) => ({ i, m: ms[k], z: +i.style.zIndex || 0 })).sort((a, b) => a.z - b.z).forEach(o => {
-      if (!o.m) return; const r = o.i.getBoundingClientRect(), hr = host.getBoundingClientRect(), s = 1000 / hr.width;
-      c.drawImage(o.m, (r.left - hr.left) * s, (r.top - hr.top) * s, r.width * s, r.height * s);
+      if (!o.m || !o.i._g) return; const g = o.i._g;
+      c.save(); c.translate(g.cx, g.cy); c.rotate((g.a || 0) * Math.PI / 180); c.drawImage(o.m, -g.w / 2, -g.h / 2, g.w, g.h); c.restore();
     });
     c.fillStyle = 'rgba(95,243,255,.7)'; c.font = '20px sans-serif'; c.fillText('ORION · 机甲组装', 24, 1376);
     cv.toBlob(b => { if (!b) return; const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '我的机甲.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); sfx(800); }, 'image/png');
@@ -334,6 +341,7 @@ let inited = false;
 async function init(){
   if (inited) return; inited = true;
   MAN = await (await fetch('assets/parts/manifest.json')).json();
+  RIG = await (await fetch(cdn('assets/parts/rig.json')).catch(() => fetch('assets/parts/rig.json'))).json();
   buildLibrary();
   // 预设芯片
   $('#bPresets').innerHTML = SERIES.map(s => `<button data-sid="${s.id}" title="${s.cn} · ${ROMAN[s.t]}阶 · ${QUAL[s.q].n}">
