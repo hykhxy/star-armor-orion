@@ -166,7 +166,7 @@ function layout(){
   const h = pk('head');
   let hc = { y: YT - 40, h: 0 };
   if (h){
-    const d = MAN[h.sid].head; let sh = .62 * Ht / d[1]; if (d[0] * sh > 1.5 * tw) sh = 1.5 * tw / d[0];
+    const d = MAN[h.sid].head; let sh = .44 * Ht / d[1]; if (d[0] * sh > 1.0 * tw) sh = 1.0 * tw / d[0];
     const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + (.09 + ({ havoc: .09, gen: .03 }[tsid] || 0)) * Ht;
     out.head = { x: CX - F(h.sid, 'head').colX * sh, y: yb - hh, w: hw, h: hh, z: 4 }; hc = { y: yb - hh, h: hh };
   }
