@@ -173,7 +173,13 @@ function layout(){
     const p = pk(slot); if (!p) return;
     const rp = RIG[p.sid] && RIG[p.sid][slot]; if (!rp) return;
     const sk = (rt[slot] && rt[slot].sock) || RIG._avg[slot];
-    const u = ru(p.sid, rp.s), w = rp.pw * u, h = rp.ph * u;
+    let u = ru(p.sid, rp.s);
+    const pairK = slot.startsWith('leg') ? ['legL', 'legR'] : slot.startsWith('arm') ? ['armL', 'armR'] : null;
+    if (pairK){   // 左右成对零件来自不同系列时,统一到同一高度,避免一长一短、接口错位
+      const hs = pairK.map(k => { const q = pk(k), r2 = q && RIG[q.sid] && RIG[q.sid][k]; return r2 ? r2.ph * ru(q.sid, r2.s) : null; }).filter(v => v);
+      if (hs.length === 2){ const mean = (hs[0] + hs[1]) / 2; u = mean / rp.ph; }
+    }
+    const w = rp.pw * u, h = rp.ph * u;
     let Wx = tx + sk[0] * tw; const Wy = ty + sk[1] * th;        // 躯干上的插座
     if (slot.startsWith('arm') && p.sid !== tsid && rt[slot] && rt[slot].ie != null && rp.ie != null){
       // 内缘对齐:异系手臂的内侧边,贴到躯干自带手臂的内侧边(肩甲宽窄不同也不会脱开)
