@@ -169,8 +169,9 @@ function layout(){
   const T = g('torso'); if (T) R.push({ id: 'torso', slot: 'torso', file: 'torso', key: eq.torso, r: It.parts.torso.slice(), z: 5 });
   const H = g('head');
   if (H){ const ip = ISO[H.sid], s = H.sid === tsid ? 1 : clamp(It.torsoW / ip.torsoW, .6, 1.5);
-    const dx = (ip.plug.head[0] - ip.plug.collar[0]) * s, dy = (ip.plug.head[1] - ip.plug.collar[1]) * s;   // 头底相对本系列躯干领口的沉入量
-    const sock = [It.plug.collar[0] + dx, It.plug.collar[1] + dy];
+    // 颈根对到目标躯干原装头的颈根位置(各套颈长不同,不能按自己的沉入量算);太阳神躯干无颈座,另有 sock 与 lift 微调
+    const base = H.sid === tsid ? It.plug.head : (It.plug.sock || It.plug.head);
+    const sock = [base[0], base[1] - (H.sid === tsid ? 0 : (ip.plug.lift || 0) * s)];
     R.push({ id: 'head', slot: 'head', file: 'head', key: eq.head, r: place(ip.parts.head, ip.plug.head, sock, s), z: 8 }); }
   const A = g('armL');
   if (A){ const ip = ISO[A.sid], same = A.sid === tsid;
@@ -182,6 +183,7 @@ function layout(){
   if (L){ const ip = ISO[L.sid], same = L.sid === tsid;
     const s = same ? 1 : clamp(dist(It.plug.legL, It.plug.legR) / dist(ip.plug.legL, ip.plug.legR), .75, 1.3);
     const sm = mid(It.plug.legL, It.plug.legR), pm = mid(ip.plug.legL, ip.plug.legR);
+    if (!same) sm[1] -= (window.ORION_LL ?? .03) * ip.parts.legs[3] * s;   // 异系腿再往上插进骨盆后面,避免躯干像叠在腿上
     R.push({ id: 'legs', slot: 'legL', file: 'legs', key: eq.legL, r: place(ip.parts.legs, pm, sm, s), z: 3 }); }
   // 舞台适配:以当前躯干系列的完整立绘为基准,混搭溢出时再整体缩小
   const f = It.fig; let x0 = f[0], y0 = f[1], x1 = f[2], y1 = f[3];
