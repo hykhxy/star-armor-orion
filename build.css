@@ -45,6 +45,7 @@
 .hz text{fill:#5ff3ff;font-size:20px;text-anchor:middle;opacity:.6;pointer-events:none;letter-spacing:.1em}
 .hz:hover rect{fill:rgba(95,243,255,.1)}.hz.filled rect{stroke-opacity:.08;fill:transparent}.hz.filled text{opacity:0}
 .hz.filled:hover rect,.hz.sel rect{stroke:#ffc24a;stroke-opacity:.9;stroke-dasharray:none;fill:rgba(255,194,74,.06)}.hz.sel text{fill:#ffc24a;opacity:.9}
+.hz text{opacity:0}.hz:hover text,.hz.sel text{opacity:.85}.hz:not(.filled) rect{stroke-opacity:.12}.hz:not(.filled):hover rect{stroke-opacity:.6}
 .hz.over rect{stroke:#fff;fill:rgba(95,243,255,.25)}
 .b-tip{margin:6px 0 4px;font-size:11px;color:#6fb8cc}
 .b-acts{display:flex;gap:8px}.b-acts button{background:rgba(8,22,36,.8);border:1px solid rgba(95,243,255,.35);color:#cfeffa;padding:6px 14px;cursor:pointer;font-size:12px}
