@@ -168,7 +168,7 @@ const BLURB = {
   cat:    '红金火焰与多臂法相,头头猫专属的特装机。',
   sky:    '蓝白羽翼与光枪,轻量化的高阶空战机。',
 };
-let view = 'side', cur = null, SZ = {};
+let view = 'iso', cur = null, SZ = {};
 const IDS = SERIES.map(s => s.id);
 const uOf = (v, sid, t) => `assets/pick/${t ? 't-' : ''}${v}-${sid}.webp`;
 function setSrc(img, u){ img.src = cdn(u); img.onerror = () => { img.onerror = null; img.src = u; }; }
@@ -242,6 +242,14 @@ function savePng(){
     cv.toBlob(b => { if (!b) return; const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = SBY[cur].cn + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); sfx(800); }, 'image/png');
   });
 }
+function confirmMech(){
+  if (!cur) return;
+  const m = { sid: cur, cn: SBY[cur].cn, view, src: uOf(view, cur) };
+  try { localStorage.setItem('orion.mech', JSON.stringify(m)); } catch (e) {}
+  const b = $('#bConfirm'); if (b){ b.classList.add('ok'); b.textContent = '已选定 ✓ ' + m.cn; clearTimeout(b._t); b._t = setTimeout(() => { b.classList.remove('ok'); b.textContent = '选择此机甲'; }, 2200); }
+  sfx(900);
+  document.dispatchEvent(new CustomEvent('orion:mech', { detail: m }));
+}
 function sfx(f){ try { window.OrionAudio && window.OrionAudio.blip(f, .09, 'triangle', .04, 200); } catch (e) {} }
 
 /* ---------- 初始化 ---------- */
@@ -256,12 +264,14 @@ function init(){
   $('#bNext').addEventListener('click', () => step(1));
   $('#bRand').addEventListener('click', () => { let n; do { n = IDS[Math.floor(Math.random() * IDS.length)]; } while (n === cur && IDS.length > 1); pick(n); });
   $('#bSave').addEventListener('click', savePng);
+  $('#bConfirm').addEventListener('click', confirmMech);
   document.addEventListener('keydown', e => { if (!document.body.classList.contains('stage-build')) return;
     if (e.key === 'ArrowLeft') step(-1); else if (e.key === 'ArrowRight') step(1); else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') setView(view === 'side' ? 'iso' : 'side'); });
 }
 function open(){
   init();
   let s = null; try { s = localStorage.getItem('orion.pick'); } catch (e) {}
+  view = 'iso';   // 进入页面默认对角正交视角
   const host = $('#bFig'); host.innerHTML = ''; host.dataset.key = '';
   pick(SBY[s] ? s : IDS[0], true);
 }
