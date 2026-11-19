@@ -167,7 +167,7 @@ function layout(){
   let hc = { y: YT - 40, h: 0 };
   if (h){
     const d = MAN[h.sid].head; let sh = .44 * Ht / d[1]; if (d[0] * sh > 1.0 * tw) sh = 1.0 * tw / d[0];
-    const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + (.09 + ({ havoc: .09, gen: .03 }[tsid] || 0)) * Ht;
+    const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + (.12 + ({ havoc: .09, gen: .03 }[tsid] || 0)) * Ht;
     out.head = { x: CX - F(h.sid, 'head').colX * sh, y: yb - hh, w: hw, h: hh, z: 4 }; hc = { y: yb - hh, h: hh };
   }
   const hipW = (tf.hipR - tf.hipL) * st;
@@ -176,13 +176,13 @@ function layout(){
   for (const k of legs){
     const p = pk(k), d = MAN[p.sid][k], f = F(p.sid, k);
     const lh = Math.max(1.25 * Ht, Math.min(1.55 * Ht, d[1] * sLeg0)), s = lh / d[1], side = k === 'legL' ? 1 : -1;
-    out[k] = { x: CX + side * (f.topW * s * .5 - 2) - f.topX * s, y: YT + .72 * Ht, w: d[0] * s, h: lh, z: 3 };
+    out[k] = { x: CX + side * (f.topW * s * .5 - 2) - f.topX * s, y: YT + .69 * Ht, w: d[0] * s, h: lh, z: 3 };
   }
   for (const k of ['armL', 'armR']){
     const p = pk(k); if (!p) continue;
     const d = MAN[p.sid][k], f = F(p.sid, k), s = Ht / d[1], side = k === 'armL' ? 1 : -1;
     const edge = side > 0 ? tf.shR : tf.shL, ex = CX + side * Math.abs(edge - tf.neckX) * st, inner = side > 0 ? f.x0 : f.x1;
-    out[k] = { x: ex - side * .04 * tw - inner * s, y: YT + .02 * Ht, w: d[0] * s, h: d[1] * s, z: 6 };
+    out[k] = { x: ex - side * .08 * tw - inner * s, y: YT + .02 * Ht, w: d[0] * s, h: d[1] * s, z: 6 };
   }
   const wp = pk('weapon');
   if (wp){ const d = MAN[wp.sid].weapon, hh = 1.7 * Ht, ww = d[0] / d[1] * hh; out.weapon = { x: 70, y: 1365 - hh, w: ww, h: hh, z: 7 }; }
@@ -196,8 +196,30 @@ function layout(){
       out.halo = { x: CX - ww / 2, y: hc.y + hc.h * .5 - hh / 2, w: ww, h: hh, z: 1 }; } }
   return out;
 }
+const FULL = { seraph: [996, 1500], monkey: [958, 1500], abyss: [988, 1500], falcon: [866, 1500], sol: [922, 1500], star: [924, 1500],
+  havoc: [1002, 1500], gen: [743, 1498], sky: [972, 1499], luna: [915, 1500], cat: [997, 1500] };
+/* 当前装备恰好是某一套预设的完整原件时,返回该套 id(此时直接显示整机原图) */
+function pureSid(){
+  const keys = Object.keys(eq); if (!keys.length) return null;
+  const sid = eq[keys[0]].split('/')[0]; if (!FULL[sid]) return null;
+  const want = {};
+  for (const slot of SLOT_ORDER){ const alt = slot === 'halo' ? (MAN[sid].halo ? 'halo' : null) : slot; if (alt && MAN[sid][alt]) want[slot] = sid + '/' + alt; }
+  const wk = Object.keys(want);
+  return wk.length === keys.length && wk.every(k => eq[k] === want[k]) ? sid : null;
+}
 function renderStage(anim){
   const host = $('#bFig'); if (!host) return;
+  const ps = pureSid(); let full = host.querySelector('img.bfull');
+  if (ps){
+    host.querySelectorAll('img.bp').forEach(i => i.remove());
+    const d = FULL[ps]; let h = 1340, w = d[0] / d[1] * h; if (w > 980){ w = 980; h = w * d[1] / d[0]; }
+    if (!full){ full = document.createElement('img'); full.className = 'bfull'; full.draggable = false; host.appendChild(full); }
+    if (full.dataset.sid !== ps){ full.dataset.sid = ps; full.src = `assets/full/${ps}.webp`; full.alt = ps; }
+    full.style.cssText = `left:${500 / 10}%;top:${700 / 14}%;width:${w / 10}%;height:${h / 14}%;z-index:5`;
+    document.querySelectorAll('#bHit .hz').forEach(h2 => { h2.classList.toggle('filled', !!eq[h2.dataset.slot]); h2.classList.toggle('sel', h2.dataset.slot === sel); });
+    return;
+  }
+  if (full) full.remove();
   host.querySelectorAll('img.bp').forEach(i => { if (!eq[i.dataset.slot] || eq[i.dataset.slot] !== i.dataset.key) i.remove(); });
   const L = layout();
   for (const slot of SLOT_ORDER){
@@ -327,6 +349,7 @@ async function open(){
 }
 window.OrionBuild = { _set: o => { eq = o; refresh(); }, open, _calc: calc, _eq: () => eq, _preset: preset };
 })();
+
 
 
 
