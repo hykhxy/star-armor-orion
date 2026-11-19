@@ -20,7 +20,7 @@ const tween = (ms, fn) => new Promise(res => {
 });
 
 /* ---------- 阶段管理 ---------- */
-const STAGES = ['boot','banner','glitch','menu','welcome','warp','hub','panel','world','coming','build'];
+const STAGES = ['boot','banner','glitch','menu','welcome','warp','hub','panel','world','coming','build','create'];
 function setStage(...on){
   STAGES.forEach(s => body.classList.remove('stage-' + s));
   on.forEach(s => body.classList.add('stage-' + s));
@@ -224,7 +224,7 @@ const SLOT = [
 ];
 const N = SLOT.length;
 const ORBS = [
-  { key: 'create', cn: '创造角色', en: 'CREATE PILOT',   desc: '设定你的驾驶员 —— 姓名、代号、出身星域与同步率。选择三个起点身份之一,开始你的拆装人生。' },
+  { key: 'create', cn: '创造角色', en: 'CREATE PILOT',   desc: '设定你的驾驶员 —— 姓名、样貌与性格,在荒野地图上选定开局地点,再挑选天赋与专属机甲。' },
   { key: 'author', cn: '作者的话', en: "AUTHOR'S NOTE",  desc: '来自创作者的留言、设计笔记与致谢。' },
   { key: 'build',  cn: '选择机甲', en: 'SELECT MECHA', desc: '走进机库,从十一台整机中挑选属于你的贴身机甲,查看侧身与对角正交的全貌与数值。' },
   { key: 'world',  cn: '世界观',   en: 'WORLDVIEW',      desc: '' },
@@ -629,12 +629,13 @@ async function dive(info){
   });
   hubzoom.style.transition = ''; hubzoom.style.transform = ''; hubzoom.style.filter = ''; hubzoom.style.transformOrigin = '';
   inHub = false;
-  if (info.key === 'world') openWorld(); else if (info.key === 'build') openBuild(); else openComing(info);
+  if (info.key === 'world') openWorld(); else if (info.key === 'build'){ window.__fromCreate = false; openBuild(); } else if (info.key === 'create') openCreate(); else openComing(info);
   await tween(reduce ? 100 : 1500, k => { iris.style.opacity = 1 - easeOut(k); });
   iris.style.opacity = 0; iris.style.transform = 'scale(0)';
 }
 async function returnToHub(){
-  if (!(has('world') || has('coming') || has('build'))) return;
+  if (!(has('world') || has('coming') || has('build') || has('create'))) return;
+  window.__fromCreate = false;
   const sx = innerWidth / 2, sy = innerHeight / 2;
   iris.style.left = sx + 'px'; iris.style.top = sy + 'px';
   blip(300, 1, 'sine', .04, 600);
@@ -643,7 +644,7 @@ async function returnToHub(){
   orbs.forEach(o => o.el.classList.remove('picked', 'gone'));
   lightorb.style.display = 'none'; lightorb.style.transform = 'scale(0)';
   shards.length = 0; cond.length = 0; setCurl(0);
-  worldActive = false; comingActive = false; buildActive = false;
+  worldActive = false; comingActive = false; buildActive = false; createActive = false;
   enterHub();
   await tween(reduce ? 100 : 1300, k => { iris.style.opacity = 1 - easeOut(k); });
   iris.style.opacity = 0; iris.style.transform = 'scale(0)';
@@ -651,19 +652,33 @@ async function returnToHub(){
 $('#wback').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
 $('#wback2').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
 $('#cmBack').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
-$('#bBack').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
-let buildActive = false;
+$('#crBack').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
+$('#bBack').addEventListener('click', e => { e.stopPropagation(); if (window.__fromCreate) OrionNav.toCreate(3); else returnToHub(); });
+let buildActive = false, createActive = false;
 function openBuild(){
-  setStage('build'); buildActive = true; PE = null;
+  setStage('build'); buildActive = true; createActive = false; PE = null;
   blip(200, 1.1, 'sine', .05, 700);
   if (window.OrionBuild) window.OrionBuild.open();
 }
+function openCreate(page){
+  setStage('create'); createActive = true; buildActive = false; PE = null;
+  blip(200, 1.1, 'sine', .05, 700);
+  if (window.OrionCreate) window.OrionCreate.open(page);
+}
 window.OrionAudio = { blip };
+/* 创造角色 ⇄ 选择机甲 往返 */
+window.OrionNav = {
+  toBuild(fromCreate){ window.__fromCreate = !!fromCreate; openBuild(); },
+  toCreate(page){ window.__fromCreate = false; openCreate(page); }
+};
+document.addEventListener('orion:mech', () => { if (window.__fromCreate && has('build')) setTimeout(() => { if (window.__fromCreate && has('build')) OrionNav.toCreate(3); }, 900); });
 
 /* ---------- 键盘 ---------- */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){
     if (has('panel')) { closePanels(); return; }
+    if (has('create')) { if (window.OrionCreate && window.OrionCreate.escape()) return; returnToHub(); return; }
+    if (has('build') && window.__fromCreate) { OrionNav.toCreate(3); return; }
     if (has('world') || has('coming') || has('build')) { returnToHub(); return; }
   }
   if (has('menu') && !has('panel')) { if (e.key !== 'Tab') login(); return; }
@@ -880,7 +895,7 @@ let nt = 0, lastF = 0;
   if (inHub){ updateOrbs(t); drawFar(t); drawBelt(t, dt); drawFx(t); }
   else if (worldActive){ drawWorldStars(t); worldParallax(); }
   else if (comingActive){ drawComing(t, dt); }
-  else if (buildActive){ /* 组装页:CSS 背景 */ }
+  else if (buildActive || createActive){ /* 选择机甲 / 创造角色:CSS 背景 */ }
   else if (!has('warp')){ drawStars(t); drawDust(); }
   if ((nt++ & 1) === 0) drawNoise();
   requestAnimationFrame(frame);
