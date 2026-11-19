@@ -37,7 +37,9 @@
 .b-stage{position:relative;flex:1;min-height:0;aspect-ratio:1000/1400;max-width:100%;filter:drop-shadow(0 0 30px rgba(95,243,255,.15))}
 .b-skel,.b-hit,.b-fig{position:absolute;inset:0;width:100%;height:100%}
 .b-skel{animation:skel 4s ease-in-out infinite alternate}@keyframes skel{to{opacity:.7}}
-.bp{position:absolute;transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))}
+.bp{position:absolute;transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))}
+.bfull{position:absolute;transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 18px rgba(0,0,0,.55));animation:bfin .5s ease both}
+@keyframes bfin{from{opacity:0;transform:translate(-50%,-47%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%)}}
 .bp.drop{animation:bdrop .6s cubic-bezier(.2,.8,.2,1) both}
 @keyframes bdrop{from{opacity:0;transform:translate(-50%,-80%) scale(1.2);filter:brightness(3) blur(4px)}}
 .b-fig{pointer-events:none}.b-hit{z-index:20}
@@ -46,6 +48,7 @@
 .hz:hover rect{fill:rgba(95,243,255,.1)}.hz.filled rect{stroke-opacity:.08;fill:transparent}.hz.filled text{opacity:0}
 .hz.filled:hover rect,.hz.sel rect{stroke:#ffc24a;stroke-opacity:.9;stroke-dasharray:none;fill:rgba(255,194,74,.06)}.hz.sel text{fill:#ffc24a;opacity:.9}
 .hz text{opacity:0}.hz:hover text,.hz.sel text{opacity:.85}.hz:not(.filled) rect{stroke-opacity:.12}.hz:not(.filled):hover rect{stroke-opacity:.6}
+.hz.sel text{opacity:0}.hz.sel rect{stroke-opacity:.3}.hz.filled:hover text{opacity:.85}
 .hz.over rect{stroke:#fff;fill:rgba(95,243,255,.25)}
 .b-tip{margin:6px 0 4px;font-size:11px;color:#6fb8cc}
 .b-acts{display:flex;gap:8px}.b-acts button{background:rgba(8,22,36,.8);border:1px solid rgba(95,243,255,.35);color:#cfeffa;padding:6px 14px;cursor:pointer;font-size:12px}
