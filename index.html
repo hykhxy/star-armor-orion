@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>STAR ARMOR : ORION · 星际机甲</title>
-<meta name="description" content="STAR ARMOR : ORION —— 星际机甲风格的交互式开端页面,视差、故障转场、超空间跃迁。">
+<meta name="description" content="STAR ARMOR : ORION —— 星际机甲风格的交互式开端页面:系统自检、欢迎登录语音、会呼吸会眨眼的机甲、绕机甲公转的功能星球。">
 <meta name="theme-color" content="#0a0e12">
 <meta property="og:title" content="STAR ARMOR : ORION · 星际机甲">
-<meta property="og:description" content="系统自检 → 故障转场 → 星际主菜单 → 超空间跃迁">
+<meta property="og:description" content="系统自检 → 欢迎登录 → 机甲星域主菜单">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;500&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="stage-boot">
 
-<!-- ============ 主场景(视差图层) ============ -->
+<!-- ============ 标题页场景(视差图层) ============ -->
 <div class="scene" id="scene" aria-hidden="true">
   <div class="layer l-bg" data-depth="0.012"><img src="assets/bg-mecha.jpg" alt=""></div>
   <canvas class="layer l-stars" id="stars" data-depth="0"></canvas>
@@ -35,6 +35,52 @@
   </div>
   <canvas class="layer l-dust" id="dust" data-depth="0"></canvas>
 </div>
+
+<!-- ============ 主菜单场景:机甲 + 公转星球 ============ -->
+<section class="hub" id="hub" aria-label="主菜单">
+  <div class="hub-backdrop"></div>
+  <div class="hub-zoom" id="hubzoom">
+    <div class="hub-canvas" id="hubcanvas">
+
+      <!-- 后景组:背景 + 机甲(整体轻摇 / 呼吸 / 灯带脉动 / 扫光 / 头部微动 / 眨眼) -->
+      <div class="hl px" id="stageBack">
+        <div class="hl hl-bg"></div>
+        <div class="hl hl-sway"><div class="hl hl-breath">
+          <div class="hl hl-mech"></div>
+          <div class="hl hl-armorglow"></div>
+          <div class="hl hl-sweep"></div>
+          <div class="hl hl-head" id="mechhead">
+            <div class="hl hl-headimg"></div>
+            <i class="eyeglow eg-l"></i><i class="eyeglow eg-r"></i>
+            <i class="eyelid el-l"></i><i class="eyelid el-r"></i>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- 轨道 & 星球 -->
+      <svg class="hl hl-rings px2" id="rings" viewBox="0 0 1672 941" preserveAspectRatio="none"></svg>
+      <div class="hl hl-orbs px2" id="orbs"></div>
+
+      <!-- 前景组:手指盖在球前面,像握着球(与后景同步摆动) -->
+      <div class="hl px hl-frontgrp" id="stageFront">
+        <div class="hl hl-sway"><div class="hl hl-breath">
+          <div class="hand-box"><img src="assets/hand.webp" alt=""></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+  <canvas id="hubfx"></canvas>
+
+  <div class="hub-caption" id="cap">
+    <p class="cap-no" id="capno">01 / 05</p>
+    <h3 class="cap-cn" id="capcn">创造角色</h3>
+    <p class="cap-en" id="capen">CREATE PILOT</p>
+    <p class="cap-desc" id="capdesc"></p>
+    <button class="cap-btn" id="capgo">进入 ▸</button>
+  </div>
+  <p class="hub-hint">点击星球 · 轨道顺时针公转 &nbsp;/&nbsp; → Enter</p>
+</section>
+
 <div class="grade"></div>
 <canvas id="noise"></canvas>
 <div class="scan"></div>
@@ -64,7 +110,7 @@
   <div class="banner-line"></div>
 </section>
 
-<!-- ============ 阶段 3/4:主菜单 ============ -->
+<!-- ============ 标题页 ============ -->
 <main class="menu-wrap" id="menuwrap">
   <header class="top-bar">
     <span class="mini-logo"><img src="assets/emblem.webp" alt="">VANGUARD</span>
@@ -75,19 +121,22 @@
     <p class="eyebrow">— INTERSTELLAR MECHA PROTOCOL —</p>
     <h1 class="title glitch" data-text="STAR ARMOR">STAR ARMOR</h1>
     <h2 class="subtitle">ORION <i>/</i> 星际机甲 · 猎户纪元</h2>
-    <p class="press" id="press">Press Any Button</p>
-
-    <ul class="menu" id="menu">
-      <li class="active" data-act="new"><span class="cursor"></span>New Game<small>出击</small></li>
-      <li data-act="license"><span class="cursor"></span>License<small>授权信息</small></li>
-    </ul>
+    <p class="press" id="press">Press Any Button<small>点击登录 · CLICK TO LOGIN</small></p>
   </div>
 
   <footer class="foot">
     <span>© ORION VANGUARD · SYSTEM v4.8</span>
-    <span class="hint">MOUSE / ↑ ↓ / ENTER</span>
+    <span class="foot-r"><button class="lic-btn" id="licbtn">LICENSE</button><span class="hint">MOUSE / ENTER</span></span>
   </footer>
 </main>
+
+<!-- 欢迎登录 -->
+<section class="welcome" id="welcome" aria-live="polite">
+  <p class="w-eyebrow">IDENTITY CONFIRMED</p>
+  <h2 class="w-en">WELCOME, MASTER</h2>
+  <p class="w-cn">欢迎登录,主人</p>
+  <div class="w-bar"><i></i></div>
+</section>
 
 <!-- License 面板 -->
 <aside class="panel" id="panel">
@@ -95,24 +144,28 @@
     <h3>LICENSE</h3>
     <ul>
       <li><b>Concept</b><span>Interstellar mecha · Orion Vanguard</span></li>
-      <li><b>Key visual</b><span>Cold-cyan mecha portrait</span></li>
+      <li><b>Key visual</b><span>Cold-cyan mecha portrait · mecha hub scene</span></li>
       <li><b>Space assets</b><span>AI-generated planet / warship / orbital ring / emblem</span></li>
-      <li><b>Interface</b><span>Boot-log → glitch → title menu, inspired by NieR:Automata UI</span></li>
+      <li><b>Voice</b><span>"Welcome, Master." login voice line</span></li>
+      <li><b>Interface</b><span>Boot-log → glitch → title → orbiting hub, inspired by NieR:Automata UI</span></li>
       <li><b>Engine</b><span>HTML · CSS · Canvas · Web Audio — no frameworks</span></li>
     </ul>
     <button class="back" id="panelback">◂ BACK</button>
   </div>
 </aside>
 
-<!-- 跃迁 / 出击 -->
-<canvas id="warp"></canvas>
-<section class="sortie" id="sortie">
-  <p class="s-eyebrow">HYPERSPACE LINK ESTABLISHED</p>
-  <h2>SORTIE</h2>
-  <p class="s-cn">机体 OR-01 · 出击准备完成<br><small>敬请期待后续章节</small></p>
-  <button class="back" id="sortieback">◂ RETURN TO TITLE</button>
-</section>
+<!-- 星球详情 -->
+<aside class="panel" id="info">
+  <div class="panel-inner">
+    <h3 id="infot"></h3>
+    <p class="info-en" id="infoen"></p>
+    <p class="info-desc" id="infod"></p>
+    <p class="info-soon">// 本章节建设中 · COMING SOON</p>
+    <button class="back" id="infoback">◂ BACK</button>
+  </div>
+</aside>
 
+<audio id="welcomeAudio" src="assets/welcome-master.mp3" preload="auto"></audio>
 <script src="main.js"></script>
 </body>
 </html>

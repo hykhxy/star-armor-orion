@@ -15,7 +15,9 @@ img{display:block;user-select:none;-webkit-user-drag:none}
 
 /* ================= 场景 / 视差 ================= */
 .scene{position:fixed;inset:0;overflow:hidden;opacity:0;transition:opacity 1.6s ease}
-body.stage-menu .scene,body.stage-warp .scene,body.stage-glitch .scene{opacity:1}
+body.stage-menu .scene,body.stage-glitch .scene{opacity:1}
+body.stage-welcome .scene{opacity:1}
+body.stage-hub .scene{opacity:0;transition:opacity .8s}
 .layer{position:absolute;will-change:transform}
 .l-bg{inset:-6%;}
 .l-bg img{width:100%;height:100%;object-fit:cover;filter:saturate(1.1) contrast(1.05);animation:bgbreath 14s ease-in-out infinite alternate}
@@ -47,12 +49,12 @@ body.stage-menu .scene,body.stage-warp .scene,body.stage-glitch .scene{opacity:1
 .t3{left:50%;bottom:7vh;transform:translateX(-50%)}
 
 /* 调色 / 质感 */
-.grade{position:fixed;inset:0;pointer-events:none;background:
+.grade{position:fixed;inset:0;z-index:7;pointer-events:none;background:
   radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 20%,rgba(2,6,10,.75) 100%),
   linear-gradient(180deg,rgba(0,18,28,.35),rgba(10,0,6,.4));mix-blend-mode:multiply}
-.vignette{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 18vmin rgba(0,0,0,.85)}
-#noise{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.09;mix-blend-mode:overlay;image-rendering:pixelated}
-.scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px);opacity:.6;animation:scanmove 8s linear infinite}
+.vignette{position:fixed;inset:0;z-index:8;pointer-events:none;box-shadow:inset 0 0 18vmin rgba(0,0,0,.85)}
+#noise{position:fixed;inset:0;z-index:7;width:100%;height:100%;pointer-events:none;opacity:.09;mix-blend-mode:overlay;image-rendering:pixelated}
+.scan{position:fixed;inset:0;z-index:7;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px);opacity:.6;animation:scanmove 8s linear infinite}
 @keyframes scanmove{to{background-position:0 60px}}
 
 .glitch-flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:50;
@@ -95,8 +97,10 @@ body.stage-banner .banner{display:flex;animation:fadeIn .6s ease}
 
 /* ================= 主菜单 ================= */
 .menu-wrap{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:space-between;opacity:0;pointer-events:none;transition:opacity 1.4s .4s}
-body.stage-menu .menu-wrap,body.stage-glitch .menu-wrap{opacity:1;pointer-events:auto}
-body.stage-panel .title-block,body.stage-warp .menu-wrap{opacity:0;pointer-events:none}
+body.stage-menu .menu-wrap,body.stage-glitch .menu-wrap,body.stage-hub .menu-wrap{opacity:1}
+.mute,.lic-btn{pointer-events:auto}
+body.stage-welcome .title-block{opacity:0}
+body.stage-hub .title-block{display:none}
 .top-bar{display:flex;justify-content:space-between;align-items:center;padding:3.5vh 4vw}
 .mini-logo{display:flex;align-items:center;gap:10px;font:12px var(--mono);letter-spacing:.35em;color:var(--beige);opacity:.8}
 .mini-logo img{width:34px;mix-blend-mode:screen}
@@ -173,3 +177,129 @@ body.stage-sortie .sortie{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){
   .scan,.l-ship img,.l-ring img,.l-planet img,.l-bg img{animation:none}
 }
+
+/* ================= 标题页补充 ================= */
+.press small{display:block;margin-top:14px;font:11px var(--mono);letter-spacing:.4em;opacity:.55}
+.foot-r{display:flex;align-items:center;gap:22px}
+.lic-btn{font:11px var(--mono);letter-spacing:.25em;padding:5px 10px;border:1px solid rgba(220,217,212,.3);opacity:.8;transition:.2s}
+.lic-btn:hover{color:var(--cyan);border-color:var(--cyan)}
+body.stage-hub .foot .hint,body.stage-hub .foot>span:first-child{display:none}
+body.stage-hub .foot{justify-content:flex-end}
+
+/* ================= 欢迎登录 ================= */
+.welcome{position:fixed;inset:0;z-index:35;display:grid;place-content:center;justify-items:center;text-align:center;opacity:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(4,12,18,.55),rgba(2,5,8,.92));transition:opacity .5s}
+body.stage-welcome .welcome{opacity:1}
+.w-eyebrow{font:12px var(--mono);letter-spacing:.6em;color:var(--cyan);opacity:0}
+.w-en{margin:18px 0 8px;font:600 clamp(30px,6.4vw,84px)/1.1 var(--serif);letter-spacing:.18em;color:#fff;text-shadow:0 0 36px rgba(95,230,255,.7);opacity:0}
+.w-cn{font:300 clamp(18px,2.4vw,30px) var(--cn);letter-spacing:.7em;color:var(--beige);opacity:0;padding-left:.7em}
+.w-bar{margin-top:34px;width:min(60vw,420px);height:2px;background:rgba(220,217,212,.15);opacity:0}
+.w-bar i{display:block;height:100%;width:0;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+body.stage-welcome .w-eyebrow{animation:wIn .8s .1s forwards}
+body.stage-welcome .w-en{animation:wGlitch .9s .35s forwards}
+body.stage-welcome .w-cn{animation:wIn 1s 1s forwards}
+body.stage-welcome .w-bar{animation:wIn .4s .9s forwards}
+body.stage-welcome .w-bar i{animation:wBar 1.9s 1s ease-in-out forwards}
+@keyframes wIn{from{opacity:0;transform:translateY(10px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes wBar{to{width:100%}}
+@keyframes wGlitch{0%{opacity:0;transform:translateX(-14px) skewX(8deg)}25%{opacity:1;transform:translateX(10px)}40%{opacity:.3;transform:translateX(-6px)}60%{opacity:1;transform:translateX(4px)}100%{opacity:1;transform:none}}
+
+/* ================= 主菜单:机甲星域 ================= */
+.hub{position:fixed;inset:0;z-index:5;background:#02050a;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .7s}
+body.stage-hub .hub{opacity:1;pointer-events:auto}
+.hub-zoom{position:absolute;inset:0;transform:scale(1.35);filter:blur(10px) brightness(1.7);transition:transform 2.8s cubic-bezier(.16,.7,.2,1),filter 2.4s ease}
+body.stage-hub .hub-zoom{transform:none;filter:none}
+.hub-canvas{position:absolute;will-change:transform;transform-origin:50% 50%}
+.hl{position:absolute;inset:0}
+.hl-bg,.hl-mech,.hl-armorglow,.hl-headimg{background-image:url(assets/hub-bg.jpg);background-size:100% 100%;background-repeat:no-repeat}
+.hl-mech{-webkit-mask:url(assets/mask-mech.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-mech.png) 0 0/100% 100% no-repeat}
+
+/* 整体轻摇 + 呼吸(支点在机甲下方) */
+.hl-sway{transform-origin:52% 98%;animation:sway 7.5s ease-in-out infinite alternate}
+.hl-breath{transform-origin:50% 100%;animation:breath 4.8s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-.38deg) translateX(-4px)}to{transform:rotate(.38deg) translateX(4px)}}
+@keyframes breath{from{transform:scale(1,1)}to{transform:scale(1.003,1.007)}}
+
+/* 灯带脉动 + 装甲扫光 */
+.hl-armorglow{-webkit-mask:url(assets/mask-glow.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-glow.png) 0 0/100% 100% no-repeat;mix-blend-mode:screen;filter:brightness(2.4) saturate(1.7);animation:glowpulse 3.4s ease-in-out infinite alternate}
+@keyframes glowpulse{from{opacity:.05}to{opacity:.8}}
+.hl-sweep{-webkit-mask:url(assets/mask-armor.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-armor.png) 0 0/100% 100% no-repeat;mix-blend-mode:screen;
+  background:linear-gradient(104deg,transparent 42%,rgba(150,235,255,.34) 50%,transparent 58%) 0 0/260% 100%;background-position:130% 0;animation:sweep 7s 1.5s linear infinite}
+@keyframes sweep{0%{background-position:130% 0}55%,100%{background-position:-40% 0}}
+
+/* 头部:微点头 + 眼睛 */
+.hl-head{inset:auto;left:35.3%;top:0;width:20.3%;height:42.5%;transform-origin:50% 100%;animation:headmove 9s ease-in-out infinite alternate;
+  -webkit-mask-image:radial-gradient(ellipse 52% 54% at 50% 46%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 52% 54% at 50% 46%,#000 60%,transparent 100%)}
+.hl-headimg{inset:auto;left:-173.9%;top:0;width:492.6%;height:235.3%}
+@keyframes headmove{0%{transform:rotate(-.45deg) translate(-1.5px,1px)}50%{transform:rotate(.1deg) translate(.5px,-.5px)}100%{transform:rotate(.5deg) translate(1.5px,.5px)}}
+.eyeglow,.eyelid{position:absolute;display:block;transform-origin:50% 50%}
+.eyeglow{background:radial-gradient(ellipse at center,rgba(235,255,255,.95) 0%,rgba(90,230,255,.7) 32%,rgba(40,170,255,.22) 62%,transparent 75%);mix-blend-mode:screen;filter:blur(1.5px);animation:eyepulse 2.6s ease-in-out infinite alternate;transition:opacity .06s}
+.eg-l{left:33.2%;top:60.4%;width:16%;height:7%;transform:rotate(30deg)}
+.eg-r{left:58.6%;top:60.3%;width:11.8%;height:6%;transform:rotate(-36deg);animation-delay:-1.1s}
+@keyframes eyepulse{from{opacity:.45;filter:blur(1.5px) brightness(.9)}to{opacity:1;filter:blur(2px) brightness(1.5)}}
+.eyelid{background:linear-gradient(180deg,#1a2a38,#0a131c);border-radius:40%;transform-origin:50% 0;scale:1 0;opacity:.96;box-shadow:0 0 6px rgba(0,0,0,.8)}
+.el-l{left:33.95%;top:60.9%;width:14.5%;height:6%;rotate:30deg}
+.el-r{left:59.25%;top:60.55%;width:10.5%;height:5.5%;rotate:-36deg}
+.hl-head.blink .eyelid{animation:lid .24s ease-in-out}
+.hl-head.blink .eyeglow{opacity:0!important;animation:none}
+@keyframes lid{0%{scale:1 0}45%{scale:1 1.15}100%{scale:1 0}}
+
+/* 手(盖在球前面) */
+.hl-frontgrp{pointer-events:none}
+.hand-box{position:absolute;left:72.368%;top:28.162%;width:22.368%;height:28.055%}
+.hand-box img{width:100%;height:100%}
+
+/* 轨道环 & 星球 */
+.hl-rings{width:100%;height:100%;overflow:visible;pointer-events:none;mix-blend-mode:screen}
+.ring{fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.ring.r1{stroke:rgba(150,235,255,.85);stroke-width:2.2;stroke-dasharray:420 60 80 60;animation:ringflow 9s linear infinite;filter:drop-shadow(0 0 6px rgba(100,220,255,.9))}
+.ring.r2{stroke:rgba(255,255,255,.7);stroke-width:1;stroke-dasharray:120 200;animation:ringflow 6s linear infinite reverse}
+.ring.r3{stroke:rgba(190,150,255,.65);stroke-width:1.4;stroke-dasharray:260 90 30 90;animation:ringflow 12s linear infinite;filter:drop-shadow(0 0 5px rgba(170,120,255,.8))}
+@keyframes ringflow{to{stroke-dashoffset:-1200}}
+.hl-orbs{inset:0;pointer-events:none}
+.orb{position:absolute;left:0;top:0;border-radius:50%;pointer-events:auto;cursor:pointer;transform-origin:0 0;will-change:transform;-webkit-tap-highlight-color:transparent}
+.orb-glass{position:absolute;inset:0;border-radius:50%;overflow:hidden;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.55) 0,rgba(200,225,255,.16) 14%,rgba(30,50,120,.35) 48%,rgba(8,14,40,.72) 78%,rgba(90,170,255,.6) 100%);
+  box-shadow:inset 0 0 40px rgba(130,190,255,.55),inset -14px -18px 50px rgba(160,100,255,.28),0 0 30px rgba(110,190,255,.55),0 0 90px rgba(80,150,255,.28);
+  border:1.5px solid rgba(190,225,255,.55);transition:box-shadow .5s,border-color .5s}
+.orb-neb{position:absolute;inset:-25%;background:conic-gradient(from 0deg,rgba(80,120,255,.0),rgba(120,200,255,.45),rgba(190,120,255,.35),rgba(60,100,255,0),rgba(100,220,255,.4),rgba(80,120,255,0));mix-blend-mode:screen;filter:blur(18px);animation:nebspin 16s linear infinite;opacity:.8}
+.orb-neb.n2{inset:-10%;animation-duration:24s;animation-direction:reverse;filter:blur(26px);opacity:.5}
+@keyframes nebspin{to{transform:rotate(360deg)}}
+.orb-stars{position:absolute;inset:0;background-image:radial-gradient(1.5px 1.5px at 22% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 22%,#cfe,transparent),radial-gradient(1.4px 1.4px at 58% 72%,#fff,transparent),radial-gradient(1px 1px at 30% 78%,#bdf,transparent),radial-gradient(1.2px 1.2px at 82% 58%,#fff,transparent);opacity:.8;animation:twk 3s ease-in-out infinite alternate}
+@keyframes twk{from{opacity:.35}to{opacity:1}}
+.orb-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:.32em .8em .28em;white-space:nowrap;text-align:center;font:700 1em/1.15 var(--cn);letter-spacing:.12em;color:#fff;
+  background:linear-gradient(180deg,rgba(8,18,38,.72),rgba(5,10,24,.78));border:1px solid rgba(170,225,255,.8);box-shadow:0 0 14px rgba(110,200,255,.5),inset 0 0 10px rgba(110,200,255,.2);text-shadow:0 0 10px rgba(130,220,255,.9);clip-path:polygon(7% 0,93% 0,100% 20%,100% 80%,93% 100%,7% 100%,0 80%,0 20%)}
+.orb-label::after{content:"";display:block;margin:.28em auto 0;width:.55em;height:.28em;background:rgba(190,235,255,.9);clip-path:polygon(0 0,100% 0,50% 100%)}
+.orb.active .orb-glass{border-color:rgba(230,245,255,.9);box-shadow:inset 0 0 50px rgba(150,210,255,.7),inset -14px -18px 60px rgba(170,110,255,.38),0 0 50px rgba(130,210,255,.85),0 0 150px rgba(90,160,255,.45);animation:orbpulse 3s ease-in-out infinite alternate}
+@keyframes orbpulse{to{filter:brightness(1.25)}}
+.orb:hover .orb-glass{border-color:#fff;box-shadow:inset 0 0 50px rgba(160,220,255,.8),0 0 60px rgba(140,220,255,.9)}
+
+#hubfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.hub-caption{position:absolute;left:4vw;bottom:6.5vh;z-index:6;width:min(80vw,340px);padding:18px 20px 16px;border-left:2px solid var(--cyan);background:linear-gradient(90deg,rgba(4,12,22,.78),rgba(4,12,22,0));transition:opacity .35s,transform .35s}
+.hub-caption.swap{opacity:0;transform:translateY(8px)}
+.cap-no{font:11px var(--mono);letter-spacing:.4em;color:var(--cyan)}
+.cap-cn{margin-top:8px;font:500 clamp(24px,3vw,36px) var(--cn);letter-spacing:.3em;color:#fff;text-shadow:0 0 18px rgba(95,230,255,.5)}
+.cap-en{margin-top:4px;font:12px var(--mono);letter-spacing:.4em;color:rgba(160,235,255,.8)}
+.cap-desc{margin-top:12px;font:300 13px/1.8 var(--cn);letter-spacing:.08em;color:var(--beige);opacity:.85}
+.cap-btn{margin-top:14px;font:12px var(--mono);letter-spacing:.3em;padding:8px 16px;border:1px solid rgba(95,230,255,.6);color:var(--cyan);transition:.2s}
+.cap-btn:hover{background:rgba(95,230,255,.15);box-shadow:0 0 14px rgba(95,230,255,.4)}
+.hub-hint{position:absolute;left:50%;bottom:2.8vh;transform:translateX(-50%);z-index:6;font:11px var(--mono);letter-spacing:.3em;opacity:.5;white-space:nowrap}
+
+.info-en{font:12px var(--mono);letter-spacing:.4em;color:var(--cyan);margin:-12px 0 18px}
+.info-desc{font:300 15px/2 var(--cn);letter-spacing:.06em;color:var(--beige)}
+.info-soon{margin-top:20px;font:12px var(--mono);letter-spacing:.25em;color:rgba(255,58,94,.9)}
+
+@media (max-width:720px){
+  .hub-caption{left:50%;transform:translateX(-50%);bottom:5vh;width:90vw;text-align:center;border-left:0;border-top:2px solid var(--cyan);background:linear-gradient(180deg,rgba(4,12,22,.7),transparent)}
+  .hub-caption.swap{transform:translate(-50%,8px)}
+  .hub-hint{display:none}
+}
+.hub-backdrop{position:absolute;inset:-6%;background:url(assets/hub-bg.jpg) center/cover;filter:blur(24px) brightness(.55) saturate(1.2)}
+.hl-rings.spin{filter:brightness(1.9) drop-shadow(0 0 8px rgba(120,220,255,.8));transition:filter .4s}
+.hl-rings{transition:filter .8s}
+body.stage-info #info{opacity:1;pointer-events:auto}
+/* 主菜单:减弱全局暗角/调色,让机甲亮起来 */
+body.stage-hub .grade{opacity:.18;transition:opacity 1.2s}
+body.stage-hub .vignette{box-shadow:inset 0 0 9vmin rgba(0,0,0,.55)}
+body.stage-hub .scan{opacity:.25}
+body.stage-hub #noise{opacity:.05}
+.orb-glass{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.6) 0,rgba(200,225,255,.2) 14%,rgba(30,60,140,.28) 48%,rgba(8,16,48,.55) 78%,rgba(110,190,255,.7) 100%)}
