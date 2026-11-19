@@ -20,7 +20,7 @@ const tween = (ms, fn) => new Promise(res => {
 });
 
 /* ---------- 阶段管理 ---------- */
-const STAGES = ['boot','banner','glitch','menu','welcome','warp','hub','panel','world','coming'];
+const STAGES = ['boot','banner','glitch','menu','welcome','warp','hub','panel','world','coming','build'];
 function setStage(...on){
   STAGES.forEach(s => body.classList.remove('stage-' + s));
   on.forEach(s => body.classList.add('stage-' + s));
@@ -314,7 +314,7 @@ async function onOrbClick(i){
 function enterHub(){
   layoutHub(); resizeFx();
   setStage('hub');
-  inHub = true; locked = false; introOn = false; introT0 = performance.now() + 900;
+  inHub = true; locked = false; busy = false; rot = null; introOn = false; introT0 = performance.now() + 900;
   setTimeout(() => { introOn = true; }, 900 + 1700);
   noiseBurst(.7, .06, 700); blip(80, 1.4, 'sawtooth', .05, 160);
   scheduleBlink();
@@ -629,12 +629,12 @@ async function dive(info){
   });
   hubzoom.style.transition = ''; hubzoom.style.transform = ''; hubzoom.style.filter = ''; hubzoom.style.transformOrigin = '';
   inHub = false;
-  if (info.key === 'world') openWorld(); else openComing(info);
+  if (info.key === 'world') openWorld(); else if (info.key === 'build') openBuild(); else openComing(info);
   await tween(reduce ? 100 : 1500, k => { iris.style.opacity = 1 - easeOut(k); });
   iris.style.opacity = 0; iris.style.transform = 'scale(0)';
 }
 async function returnToHub(){
-  if (!(has('world') || has('coming'))) return;
+  if (!(has('world') || has('coming') || has('build'))) return;
   const sx = innerWidth / 2, sy = innerHeight / 2;
   iris.style.left = sx + 'px'; iris.style.top = sy + 'px';
   blip(300, 1, 'sine', .04, 600);
@@ -643,7 +643,7 @@ async function returnToHub(){
   orbs.forEach(o => o.el.classList.remove('picked', 'gone'));
   lightorb.style.display = 'none'; lightorb.style.transform = 'scale(0)';
   shards.length = 0; cond.length = 0; setCurl(0);
-  worldActive = false; comingActive = false;
+  worldActive = false; comingActive = false; buildActive = false;
   enterHub();
   await tween(reduce ? 100 : 1300, k => { iris.style.opacity = 1 - easeOut(k); });
   iris.style.opacity = 0; iris.style.transform = 'scale(0)';
@@ -651,12 +651,20 @@ async function returnToHub(){
 $('#wback').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
 $('#wback2').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
 $('#cmBack').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
+$('#bBack').addEventListener('click', e => { e.stopPropagation(); returnToHub(); });
+let buildActive = false;
+function openBuild(){
+  setStage('build'); buildActive = true; PE = null;
+  blip(200, 1.1, 'sine', .05, 700);
+  if (window.OrionBuild) window.OrionBuild.open();
+}
+window.OrionAudio = { blip };
 
 /* ---------- 键盘 ---------- */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){
     if (has('panel')) { closePanels(); return; }
-    if (has('world') || has('coming')) { returnToHub(); return; }
+    if (has('world') || has('coming') || has('build')) { returnToHub(); return; }
   }
   if (has('menu') && !has('panel')) { if (e.key !== 'Tab') login(); return; }
   if (!has('hub') || has('panel') || locked) return;
@@ -872,6 +880,7 @@ let nt = 0, lastF = 0;
   if (inHub){ updateOrbs(t); drawFar(t); drawBelt(t, dt); drawFx(t); }
   else if (worldActive){ drawWorldStars(t); worldParallax(); }
   else if (comingActive){ drawComing(t, dt); }
+  else if (buildActive){ /* 组装页:CSS 背景 */ }
   else if (!has('warp')){ drawStars(t); drawDust(); }
   if ((nt++ & 1) === 0) drawNoise();
   requestAnimationFrame(frame);
