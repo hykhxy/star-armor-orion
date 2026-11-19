@@ -430,42 +430,26 @@ document.addEventListener('DOMContentLoaded',function(){document.querySelectorAl
   </div>
 </section>
 
-<!-- 组装机甲 -->
+<!-- 选择机甲 -->
 <section class="build" id="build">
   <header class="b-head">
     <button class="w-back2 b-back" id="bBack">◂ RETURN</button>
-    <div class="b-title"><p class="eyebrow">M-01 ~ M-06 · ASSEMBLY BAY</p><h2>组装机甲</h2></div>
-    <div class="b-presets-wrap"><small>预设机体</small><div class="b-presets" id="bPresets"></div></div>
+    <div class="b-title"><p class="eyebrow">HANGAR · MECH SELECT</p><h2>选择机甲</h2></div>
+    <div class="b-view" id="bView"><button data-v="side" class="on">侧身</button><button data-v="iso">对角正交</button></div>
   </header>
   <div class="b-main">
     <aside class="b-lib">
-      <div class="b-tabs" id="bTabs"></div>
-      <div class="b-slot" id="bSlotInfo"></div>
+      <div class="b-slot"><b>机库</b><i>点击选择 · 键盘 ← → 切换 · ↑ ↓ 换视角</i></div>
       <div class="b-list" id="bList"></div>
     </aside>
     <div class="b-stagewrap">
+      <div class="b-name" id="bName"></div>
       <div class="b-stage" id="bStage">
-        <svg class="b-skel" viewBox="0 0 1000 1400" aria-hidden="true">
-          <defs><linearGradient id="skg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ff3ff"/><stop offset="1" stop-color="#2a6fd6"/></linearGradient></defs>
-          <g fill="none" stroke="url(#skg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".75">
-            <ellipse cx="500" cy="185" rx="70" ry="82"/><path d="M500 267v50"/>
-            <path d="M390 335h220l34 70-26 260-50 80h-136l-50-80-26-260z"/>
-            <path d="M500 335v410M436 440h128M440 560h120"/>
-            <path d="M390 340 318 470 298 640 286 790M610 340 682 470 702 640 714 790"/>
-            <circle cx="390" cy="345" r="16"/><circle cx="610" cy="345" r="16"/><circle cx="298" cy="640" r="11"/><circle cx="702" cy="640" r="11"/>
-            <path d="M445 640 432 860 424 1080 418 1330M555 640 568 860 576 1080 582 1330"/>
-            <circle cx="432" cy="860" r="13"/><circle cx="568" cy="860" r="13"/>
-            <path d="M380 1345h60M560 1345h60"/>
-          </g>
-          <g stroke="#5ff3ff" stroke-opacity=".12"><path d="M0 700H1000M500 0V1400"/></g>
-          <ellipse cx="500" cy="1345" rx="300" ry="26" fill="none" stroke="#5ff3ff" stroke-opacity=".35"/>
-          <ellipse cx="500" cy="1345" rx="200" ry="16" fill="none" stroke="#5ff3ff" stroke-opacity=".25"/>
-        </svg>
+        <div class="b-ring r1"></div><div class="b-ring r2"></div>
         <div class="b-fig" id="bFig"></div>
-        <svg class="b-hit" id="bHit" viewBox="0 0 1000 1400"></svg>
+        <button class="b-arrow l" id="bPrev" aria-label="上一台">‹</button><button class="b-arrow r" id="bNext" aria-label="下一台">›</button>
       </div>
-      <p class="b-tip">点击部位热区选择 · 从右侧点选或拖入零件 · 双击热区卸下</p>
-      <div class="b-acts"><button id="bUnequip">卸下当前部位</button><button id="bRand">随机组装</button><button id="bClear">清空机架</button><button id="bSave">保存图片</button></div>
+      <div class="b-acts"><button id="bRand">随机选择</button><button id="bSave">保存图片</button></div>
     </div>
     <aside class="b-stats" id="bStats"></aside>
   </div>
