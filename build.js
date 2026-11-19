@@ -1,5 +1,5 @@
 ﻿/* =====================================================
-   build.js —— 组装机甲:透明骨架 · 自由组装 · 预设 · 数值结算
+   build.js —— 选择机甲:11 台整机(侧身 / 对角正交图)· 数值结算
    数值规则取自世界卡:
    战力 = 基础出力 × 品质系数 × 耦合率% × 协同倍率;耦合率>95% 触发「完美谐振」+20% 峰值出力
    灰件耦合率锁死 ≤75%;一至九阶 MSF 出力区间;武器四大禁忌(出力赤字 / 后坐力失衡 / 散热死锁)
@@ -22,11 +22,17 @@ const mid = t => { const b = BANDS[clamp(t, 1, 8) - 1]; return Math.sqrt(b[0] * 
 const fmtKW = v => v >= 1e6 ? (v / 1e6).toFixed(2) + ' GW' : v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 1 : 2) + ' MW' : v.toFixed(v >= 100 ? 0 : 1) + ' kW';
 
 const SERIES = [
+  { id: 'gen',    cn: '通用机甲',   t: 2, q: 1, b: [1, 1, 1, 1],           light: false },
+  { id: 'monkey', cn: '齐天大圣',   t: 3, q: 2, b: [1.1, 1.1, 1.2, .9],    light: true },
+  { id: 'falcon', cn: '苍穹猎隼',   t: 3, q: 2, b: [.8, 1.45, 1, 1.2],     light: true },
   { id: 'seraph', cn: '圣翼天使',   t: 4, q: 3, b: [.95, 1.2, 1, 1.15],    light: true },
   { id: 'star',   cn: '星际机甲',   t: 4, q: 3, b: [1, 1.05, 1.1, 1.1],     light: false },
+  { id: 'luna',   cn: '月亮神',     t: 4, q: 3, b: [.9, 1.15, .95, 1.45],   light: true },
+  { id: 'cat',    cn: '头头猫',     t: 4, q: 3, b: [1, 1.1, 1, 1.2],        light: false },
   { id: 'abyss',  cn: '深渊恶魔',   t: 5, q: 4, b: [1.2, 1, 1.25, .95],     light: false },
   { id: 'havoc',  cn: '破坏神',     t: 5, q: 4, b: [1.45, .75, 1.4, .8],    light: false },
   { id: 'sol',    cn: '太阳神',     t: 6, q: 4, b: [1.1, 1, 1.35, 1.1],     light: false },
+  { id: 'sky',    cn: '天空之神',   t: 6, q: 4, b: [.9, 1.35, 1.1, 1.3],    light: true },
 ];
 const SBY = Object.fromEntries(SERIES.map(s => [s.id, s]));
 
@@ -147,197 +153,118 @@ function calc(){
   return r;
 }
 
-/* ---------- 渲染:舞台 ---------- */
-const stage = () => $('#bStage');
-function F(sid, slot){ return MAN[sid] && MAN[sid][slot] ? MAN[sid][slot][2] : null; }
-/* ===== 对角正交视角 · 四件式零件(头 / 躯干 / 双臂 / 双腿)=====
-   每套零件出自同一张母图,同系列拼装即原位还原;混搭时用「接口点」对位:
-   头底 ↔ 躯干领口,双臂肩头 ↔ 躯干肩座,双腿髋球 ↔ 躯干髋座。
-   遮挡顺序:后臂 → 双腿 → 躯干 → 头 → 前臂。 */
-let ISO = null;
+/* ---------- 选择机甲:整机侧身 / 对角正交图 ---------- */
 const cdn = p => (window.ORION_CDN || '') + p;
-const FILE = { head: 'head', torso: 'torso', armL: 'armF', legL: 'legs' };
-const UI_ORDER = ['head', 'torso', 'armL', 'legL'];
-const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-function layout(){
-  const g = k => eq[k] && PARTS[eq[k]];
-  const first = g('torso') || g('head') || g('armL') || g('legL');
-  const tsid = first ? first.sid : 'seraph', It = ISO[tsid];
-  const place = (b, pp, sock, s) => [sock[0] - (pp[0] - b[0]) * s, sock[1] - (pp[1] - b[1]) * s, b[2] * s, b[3] * s];
-  const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
-  const R = [];                                    // {id, slot, key, r:[x,y,w,h], z}
-  const T = g('torso'); if (T) R.push({ id: 'torso', slot: 'torso', file: 'torso', key: eq.torso, r: It.parts.torso.slice(), z: 5 });
-  const H = g('head');
-  if (H){ const ip = ISO[H.sid], s = H.sid === tsid ? 1 : clamp(It.torsoW / ip.torsoW, .6, 1.5);
-    // 颈根对到目标躯干原装头的颈根位置(各套颈长不同,不能按自己的沉入量算);太阳神躯干无颈座,另有 sock 与 lift 微调
-    const base = H.sid === tsid ? It.plug.head : (It.plug.sock || It.plug.head);
-    const sock = [base[0], base[1] - (H.sid === tsid ? 0 : (ip.plug.lift || 0) * s)];
-    R.push({ id: 'head', slot: 'head', file: 'head', key: eq.head, r: place(ip.parts.head, ip.plug.head, sock, s), z: 8 }); }
-  const A = g('armL');
-  if (A){ const ip = ISO[A.sid], same = A.sid === tsid;
-    const s = same ? 1 : clamp(dist(It.plug.armF, It.plug.armB) / dist(ip.plug.armF, ip.plug.armB), .75, 1.3);
-    const sm = mid(It.plug.armF, It.plug.armB), pm = mid(ip.plug.armF, ip.plug.armB);
-    R.push({ id: 'armB', slot: 'armL', file: 'armB', key: eq.armL, r: place(ip.parts.armB, pm, sm, s), z: 2 });
-    R.push({ id: 'armF', slot: 'armL', file: 'armF', key: eq.armL, r: place(ip.parts.armF, pm, sm, s), z: 9 }); }
-  const L = g('legL');
-  if (L){ const ip = ISO[L.sid], same = L.sid === tsid;
-    const s = same ? 1 : clamp(dist(It.plug.legL, It.plug.legR) / dist(ip.plug.legL, ip.plug.legR), .75, 1.3);
-    const sm = mid(It.plug.legL, It.plug.legR), pm = mid(ip.plug.legL, ip.plug.legR);
-    if (!same) sm[1] -= (window.ORION_LL ?? .03) * ip.parts.legs[3] * s;   // 异系腿再往上插进骨盆后面,避免躯干像叠在腿上
-    R.push({ id: 'legs', slot: 'legL', file: 'legs', key: eq.legL, r: place(ip.parts.legs, pm, sm, s), z: 3 }); }
-  // 舞台适配:以当前躯干系列的完整立绘为基准,混搭溢出时再整体缩小
-  const f = It.fig; let x0 = f[0], y0 = f[1], x1 = f[2], y1 = f[3];
-  for (const o of R){ x0 = Math.min(x0, o.r[0]); y0 = Math.min(y0, o.r[1]); x1 = Math.max(x1, o.r[0] + o.r[2]); y1 = Math.max(y1, o.r[1] + o.r[3]); }
-  const F = Math.min(1290 / (y1 - y0), 930 / (x1 - x0)), ox = 500 - (x0 + x1) / 2 * F, oy = 700 - (y0 + y1) / 2 * F;
-  const T2 = r => ({ cx: ox + (r[0] + r[2] / 2) * F, cy: oy + (r[1] + r[3] / 2) * F, w: r[2] * F, h: r[3] * F });
-  const out = { layers: R.map(o => Object.assign(o, T2(o.r), { a: 0 })), hit: [] };
-  const hz = [['armL', 'armB'], ['legL', 'legs'], ['torso', 'torso'], ['head', 'head']];     // 空位也要有热区:取躯干系列自己的位置
-  for (const [slot, k] of hz){ const t = T2(It.parts[k]); out.hit.push({ slot, x: t.cx - t.w / 2, y: t.cy - t.h / 2, w: t.w, h: t.h });
-    if (slot === 'armL'){ const u = T2(It.parts.armF); out.hit.push({ slot, x: u.cx - u.w / 2, y: u.cy - u.h / 2, w: u.w, h: u.h }); } }
-  return out;
-}
-function pureSid(){ return null; }
-function renderStage(anim){
-  const host = $('#bFig'); if (!host) return;
-  const L = layout(), keep = new Set(L.layers.map(o => o.id));
-  host.querySelectorAll('img.bp').forEach(i => { const o = L.layers.find(q => q.id === i.dataset.layer); if (!o || o.key !== i.dataset.key) i.remove(); });
-  for (const o of L.layers){
-    let img = host.querySelector(`img.bp[data-layer="${o.id}"]`);
-    if (!img){
-      const p = PARTS[o.key];
-      img = document.createElement('img'); img.className = 'bp' + (anim === o.slot ? ' drop' : ''); img.dataset.layer = o.id; img.dataset.slot = o.slot; img.dataset.key = o.key; img.draggable = false; img.alt = p.full;
-      const u = `assets/iso/${p.sid}/${o.file}.webp`; img.src = cdn(u); img.onerror = () => { img.onerror = null; img.src = u; }; host.appendChild(img);
-    }
-    img._g = o; img.style.cssText = `left:${o.cx / 10}%;top:${o.cy / 14}%;width:${o.w / 10}%;height:${o.h / 14}%;z-index:${o.z}`;
-  }
-  $('#bHit').innerHTML = L.hit.map(h => `<g class="hz" data-slot="${h.slot}"><rect x="${h.x}" y="${h.y}" width="${h.w}" height="${h.h}" rx="14"/><text x="${h.x + h.w / 2}" y="${h.y + 24}">${SLOTS[h.slot].cn.split(' ')[0]}</text></g>`).join('');
-  document.querySelectorAll('#bHit .hz').forEach(h => { h.classList.toggle('filled', !!eq[h.dataset.slot]); h.classList.toggle('sel', h.dataset.slot === sel); });
-}
+const BLURB = {
+  seraph: '白金羽翼与圣辉长枪,高机动的空域压制型。',
+  star:   '紫蓝流线装甲与光束长枪,均衡的星际制式旗舰机。',
+  abyss:  '黑角、蝠翼与尖刺肩甲,以压迫感著称的重装突击型。',
+  havoc:  '熔岩纹路的重甲破坏者,火力与装甲拉满,机动偏弱。',
+  sol:    '金白羽冠与日轮光环,持权杖斧的高阶统领机。',
+  gen:    '橄榄与沙色涂装的制式步枪机,量产主力。',
+  monkey: '赤金披挂与如意金箍棒,近战格斗见长。',
+  falcon: '青蓝翼状肩炮与长炮,机动与感知极高的猎杀型。',
+  luna:   '月轮光环与新月镰杖,偏重感知与机动的特装机。',
+  cat:    '红金火焰与多臂法相,头头猫专属的特装机。',
+  sky:    '蓝白羽翼与光枪,轻量化的高阶空战机。',
+};
+let view = 'side', cur = null, SZ = {};
+const IDS = SERIES.map(s => s.id);
+const uOf = (v, sid, t) => `assets/pick/${t ? 't-' : ''}${v}-${sid}.webp`;
+function setSrc(img, u){ img.src = cdn(u); img.onerror = () => { img.onerror = null; img.src = u; }; }
+function fullSet(sid){ return { head: sid + '/head', torso: sid + '/torso', armL: sid + '/armL', armR: sid + '/armR', legL: sid + '/legL', legR: sid + '/legR' }; }
 
-/* ---------- 渲染:零件库 ---------- */
-function statChips(p){
-  const o = [];
-  if (p.st.kw) o.push(['出力', fmtKW(p.st.kw)]);
-  if (p.st.draw && p.kind === 'weapon') o.push(['抽电', fmtKW(p.st.draw)]);
-  if (p.st.at) o.push(['火力', p.st.at]); if (p.st.ar) o.push(['装甲', p.st.ar]);
-  if (p.st.mo) o.push(['机动', p.st.mo]); if (p.st.se) o.push(['感知', p.st.se]);
-  o.push(['重量', p.st.w + 'kg']);
-  return o.map(([a, b]) => `<span><em>${a}</em>${b}</span>`).join('');
+function renderList(){
+  $('#bList').innerHTML = SERIES.map((s, i) => `<button class="pc ${QUAL[s.q].k}${cur === s.id ? ' on' : ''}" data-sid="${s.id}">
+    <i class="pc-no">${String(i + 1).padStart(2, '0')}</i>
+    <div class="pc-img"><img loading="lazy" alt="${s.cn}"></div>
+    <h5>${s.cn}</h5><p><u class="qc ${QUAL[s.q].k}">${QUAL[s.q].n}</u><u class="tc">${ROMAN[s.t]}阶</u></p></button>`).join('');
+  $('#bList').querySelectorAll('.pc').forEach(b => setSrc(b.querySelector('img'), uOf('side', b.dataset.sid, 1)));
 }
-function renderLib(){
-  const list = $('#bList'), tabs = $('#bTabs');
-  tabs.innerHTML = UI_ORDER.map(s => `<button class="${s === sel ? 'on' : ''}${eq[s] ? ' has' : ''}" data-slot="${s}">${SLOTS[s].cn.split(' ')[0]}</button>`).join('');
-  $('#bSlotInfo').innerHTML = `<b>${SLOTS[sel].cn}</b><i>${SLOTS[sel].mod}</i>`;
-  const ps = partsFor(sel);
-  list.innerHTML = ps.map(p => `<div class="pc ${QUAL[p.q].k}${eq[sel] === p.key ? ' on' : ''}" draggable="true" data-key="${p.key}">
-      <div class="pc-img"><img loading="lazy" src="${cdn(`assets/iso/${p.sid}/${FILE[p.slot]}.webp`)}" alt=""></div>
-      <div class="pc-t"><h5>${p.full}</h5><p><u class="qc ${QUAL[p.q].k}">${QUAL[p.q].n} ×${QUAL[p.q].c.toFixed(2)}</u><u class="tc">${ROMAN[p.t]}阶</u></p>
-      <div class="pc-s">${statChips(p)}</div></div></div>`).join('') || '<p class="empty">此部位暂无零件</p>';
+function renderStage(){
+  const host = $('#bFig'), key = cur + '|' + view;
+  if (!cur || host.dataset.key === key) return;
+  host.dataset.key = key;
+  const img = document.createElement('img'); img.className = 'pimg'; img.alt = SBY[cur].cn; img.draggable = false;
+  img.onload = () => {
+    if (!img.isConnected) return;
+    if (img.nextElementSibling) { img.remove(); return; }            // 已有更新的图,这张作废
+    while (img.previousElementSibling) img.previousElementSibling.remove();  // 只清理更早的
+    img.classList.add('in');
+  };
+  setSrc(img, uOf(view, cur)); host.appendChild(img);
+  $('#bName').innerHTML = `<b>${SBY[cur].cn}</b><i>${view === 'side' ? '侧身 · SIDE' : '对角正交 · ISO'}</i>`;
+  document.querySelectorAll('#bView button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
 }
-
-/* ---------- 渲染:数值面板 ---------- */
 function bar(label, v, K, cls){
   const w = Math.round(v / (v + K) * 100);
   return `<div class="bar ${cls || ''}"><label>${label}</label><div class="bt"><i style="width:${w}%"></i></div><b>${Math.round(v)}</b></div>`;
 }
 function renderStats(){
-  const r = calc(), el = $('#bStats');
-  if (!r.n){ el.innerHTML = '<p class="empty">机架空置 —— 从左侧选择零件,或点击上方预设机甲。</p>'; return; }
-  const q = QUAL.reduce((b, x) => Math.abs(x.c - r.Q) < Math.abs(b.c - r.Q) ? x : b);
+  const el = $('#bStats');
+  if (!cur){ el.innerHTML = '<p class="empty">从左侧选择一台机甲。</p>'; return; }
+  const s = SBY[cur], r = calc();
   el.innerHTML = `
-    <div class="s-top"><div class="s-tier t${r.T}"><small>综合阶位</small><b>${r.T ? ROMAN[r.T] : '—'}</b><em>${TIERN[r.T]}</em></div>
+    <div class="s-who"><h3>${s.cn}</h3><p>${BLURB[cur] || ''}</p></div>
+    <div class="s-top"><div class="s-tier tier-${r.T}"><small>综合阶位</small><b>${r.T ? ROMAN[r.T] : '—'}</b><em>${TIERN[r.T]}</em></div>
     <div class="s-kw"><small>实际出力</small><b>${r.kw ? fmtKW(r.kw) : '0 kW'}</b><em>基础 ${r.base ? fmtKW(r.base) : '—'}</em></div></div>
-    <div class="s-form"><span>基础出力<b>${r.base ? fmtKW(r.base) : '0'}</b></span>×<span>品质<b class="${q.k}">${r.Q.toFixed(2)}</b></span>×<span>耦合率<b>${r.C.toFixed(1)}%</b></span>×<span>协同<b>${r.syn.toFixed(2)}</b></span>${r.res ? '×<span class="res">谐振<b>1.20</b></span>' : ''}</div>
-    ${r.tags.length ? `<div class="s-tags">${r.tags.map(t => `<u>${t}</u>`).join('')}</div>` : ''}
+    <div class="s-form"><span>基础出力<b>${fmtKW(r.base)}</b></span>×<span>品质<b class="${QUAL[s.q].k}">${r.Q.toFixed(2)}</b></span>×<span>耦合率<b>${r.C.toFixed(1)}%</b></span>×<span>协同<b>${r.syn.toFixed(2)}</b></span>${r.res ? '×<span class="res">谐振<b>1.20</b></span>' : ''}</div>
     <div class="bars">
       ${bar('装甲 AP', r.ar, 260, 'b-ar')}${bar('机动', r.mo, 220, 'b-mo')}${bar('火力', r.at, 200, 'b-at')}${bar('感知', r.se, 150, 'b-se')}
       <div class="bar b-cp"><label>耦合率</label><div class="bt"><i style="width:${r.C}%"></i></div><b>${r.C.toFixed(1)}%</b></div>
-      <div class="bar b-ht ${r.heatPct > 100 ? 'hot' : ''}"><label>热负荷</label><div class="bt"><i style="width:${clamp(r.heatPct / 2, 0, 100)}%"></i></div><b>${Math.round(r.heatPct)}%</b></div>
     </div>
-    <dl class="s-meta"><div><dt>整机耐久</dt><dd>${r.hpTotal}</dd></div><div><dt>整备重量</dt><dd>${r.wt.toFixed(1)} kg</dd></div><div><dt>摩托极速</dt><dd>${r.speed ? Math.round(r.speed) + ' km/h' : '—'}</dd></div><div><dt>已装部位</dt><dd>${r.n} / 6</dd></div></dl>
-    <div class="warns">${r.warns.map(([t, m]) => `<p class="${t}">${m}</p>`).join('')}</div>`;
+    <dl class="s-meta"><div><dt>整机耐久</dt><dd>${r.hpTotal}</dd></div><div><dt>整备重量</dt><dd>${r.wt.toFixed(1)} kg</dd></div><div><dt>摩托极速</dt><dd>${r.speed ? Math.round(r.speed) + ' km/h' : '—'}</dd></div><div><dt>品质</dt><dd class="${QUAL[s.q].k}">${QUAL[s.q].n}</dd></div></dl>`;
 }
-
-function refresh(anim){ renderStage(anim); renderLib(); renderStats(); try { localStorage.setItem('orion.build2', JSON.stringify(eq)); } catch (e) {} }
-
-/* ---------- 操作 ---------- */
-function equip(slot, key){
-  const p = PARTS[key]; if (!p || !slotFits(slot, p)) return;
-  eq[slot] = key; if (slot === 'armL') eq.armR = key; if (slot === 'legL') eq.legR = key; sel = slot; refresh(slot); sfx(720);
+function pick(sid, quiet){
+  if (!SBY[sid]) return;
+  cur = sid; eq = fullSet(sid);
+  if (!$('#bList .pc')) renderList();
+  document.querySelectorAll('#bList .pc').forEach(b => b.classList.toggle('on', b.dataset.sid === cur));
+  renderStage(); renderStats();
+  try { localStorage.setItem('orion.pick', sid); } catch (e) {}
+  const on = $('#bList .pc.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (!quiet) sfx(640);
 }
-function unequip(slot){ delete eq[slot]; if (slot === 'armL') delete eq.armR; if (slot === 'legL') delete eq.legR; refresh(); sfx(300); }
-function preset(sid){
-  eq = { head: sid + '/head', torso: sid + '/torso', armL: sid + '/armL', armR: sid + '/armL', legL: sid + '/legL', legR: sid + '/legL' };
-  document.querySelectorAll('#bFig img.bp').forEach(i => i.remove());
-  refresh(); document.querySelectorAll('#bFig img.bp').forEach((i, n) => { i.classList.add('drop'); i.style.animationDelay = n * 60 + 'ms'; });
-  sfx(520);
-}
+function step(d){ const i = IDS.indexOf(cur); pick(IDS[(i + d + IDS.length) % IDS.length]); }
+function setView(v){ view = v; renderStage(); sfx(520); }
 function savePng(){
-  const host = $('#bFig'); const imgs = [...host.querySelectorAll('img.bp,img.bfull')];
-  if (!imgs.length) return;
+  const img = $('#bFig img.pimg.in'); if (!img || !cur) return;
   const cv = document.createElement('canvas'); cv.width = 1000; cv.height = 1400; const c = cv.getContext('2d');
   const g = c.createRadialGradient(500, 700, 100, 500, 700, 900); g.addColorStop(0, '#12304a'); g.addColorStop(1, '#050c16'); c.fillStyle = g; c.fillRect(0, 0, 1000, 1400);
-  const W = host.clientWidth, H = host.clientHeight;
-  const load = i => new Promise(res => { const m = new Image(); m.crossOrigin = 'anonymous'; m.onload = () => res(m); m.onerror = () => { const n = new Image(); n.onload = () => res(n); n.onerror = () => res(null); n.src = i.getAttribute('src').replace(/^https?:\/\/[^@]+@main\//, ''); }; m.src = i.currentSrc || i.src; });
-  Promise.all(imgs.map(load)).then(ms => {
-    imgs.map((i, k) => ({ i, m: ms[k], z: +i.style.zIndex || 0 })).sort((a, b) => a.z - b.z).forEach(o => {
-      if (!o.m || !o.i._g) return; const g = o.i._g;
-      c.save(); c.translate(g.cx, g.cy); c.rotate((g.a || 0) * Math.PI / 180); c.drawImage(o.m, -g.w / 2, -g.h / 2, g.w, g.h); c.restore();
-    });
-    c.fillStyle = 'rgba(95,243,255,.7)'; c.font = '20px sans-serif'; c.fillText('ORION · 机甲组装', 24, 1376);
-    cv.toBlob(b => { if (!b) return; const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '我的机甲.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); sfx(800); }, 'image/png');
+  const u = uOf(view, cur);
+  const load = src => new Promise(res => { const m = new Image(); m.crossOrigin = 'anonymous'; m.onload = () => res(m); m.onerror = () => res(null); m.src = src; });
+  load(cdn(u)).then(m => m || load(u)).then(m => {
+    if (!m) return;
+    const k = Math.min(940 / m.naturalWidth, 1240 / m.naturalHeight), w = m.naturalWidth * k, h = m.naturalHeight * k;
+    c.drawImage(m, (1000 - w) / 2, 70 + (1240 - h) / 2, w, h);
+    c.fillStyle = 'rgba(95,243,255,.8)'; c.font = '600 30px sans-serif'; c.fillText(SBY[cur].cn, 28, 1350);
+    c.fillStyle = 'rgba(95,243,255,.5)'; c.font = '18px sans-serif'; c.fillText('ORION · 选择机甲 · ' + (view === 'side' ? '侧身' : '对角正交'), 28, 1378);
+    cv.toBlob(b => { if (!b) return; const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = SBY[cur].cn + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); sfx(800); }, 'image/png');
   });
-}function randomize(){
-  eq = {};
-  for (const slot of UI_ORDER){ const ps = partsFor(slot); if (ps.length) equipQuiet(slot, ps[Math.floor(Math.random() * ps.length)].key); }
-  document.querySelectorAll('#bFig img.bp').forEach(i => i.remove()); refresh(); sfx(640);
 }
-function equipQuiet(slot, key){ eq[slot] = key; if (slot === 'armL') eq.armR = key; if (slot === 'legL') eq.legR = key; }
 function sfx(f){ try { window.OrionAudio && window.OrionAudio.blip(f, .09, 'triangle', .04, 200); } catch (e) {} }
 
 /* ---------- 初始化 ---------- */
 let inited = false;
-async function init(){
+function init(){
   if (inited) return; inited = true;
-  ISO = await (await fetch(cdn('assets/iso/iso.json')).catch(() => fetch('assets/iso/iso.json'))).json();
-  MAN = Object.fromEntries(Object.keys(ISO).map(k => [k, { head: 1, torso: 1, armL: 1, legL: 1 }]));
+  MAN = Object.fromEntries(IDS.map(k => [k, { head: 1, torso: 1, armL: 1, armR: 1, legL: 1, legR: 1 }]));
   buildLibrary();
-  // 预设芯片
-  $('#bPresets').innerHTML = SERIES.map(s => `<button data-sid="${s.id}" title="${s.cn} · ${ROMAN[s.t]}阶 · ${QUAL[s.q].n}">
-    <img src="${cdn(`assets/iso/${s.id}/head.webp`)}" alt=""><span>${s.cn}</span><i class="${QUAL[s.q].k}">${ROMAN[s.t]}</i></button>`).join('');
-  // 事件
-  $('#bPresets').addEventListener('click', e => { const b = e.target.closest('button'); if (b) preset(b.dataset.sid); });
-  $('#bTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ sel = b.dataset.slot; refresh(); } });
-  $('#bList').addEventListener('click', e => { const c = e.target.closest('.pc'); if (c) equip(sel, c.dataset.key); });
-  $('#bList').addEventListener('dragstart', e => { const c = e.target.closest('.pc'); if (!c) return; e.dataTransfer.setData('text/plain', c.dataset.key); e.dataTransfer.effectAllowed = 'copy'; });
-  const hit = $('#bHit');
-  hit.addEventListener('click', e => { const g = e.target.closest('.hz'); if (g){ sel = g.dataset.slot; refresh(); } });
-  hit.addEventListener('dblclick', e => { const g = e.target.closest('.hz'); if (g) unequip(g.dataset.slot); });
-  hit.addEventListener('dragover', e => { const g = e.target.closest('.hz'); if (g){ e.preventDefault(); document.querySelectorAll('#bHit .hz').forEach(h => h.classList.toggle('over', h === g)); } });
-  hit.addEventListener('dragleave', () => document.querySelectorAll('#bHit .hz.over').forEach(h => h.classList.remove('over')));
-  hit.addEventListener('drop', e => { e.preventDefault(); document.querySelectorAll('#bHit .hz.over').forEach(h => h.classList.remove('over'));
-    const g = e.target.closest('.hz'); const k = e.dataTransfer.getData('text/plain'); if (g && k) equip(g.dataset.slot, k); });
-  $('#bClear').addEventListener('click', () => { eq = {}; document.querySelectorAll('#bFig img.bp').forEach(i => i.remove()); refresh(); sfx(260); });
-  $('#bRand').addEventListener('click', randomize);
+  $('#bList').addEventListener('click', e => { const b = e.target.closest('.pc'); if (b) pick(b.dataset.sid); });
+  $('#bView').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.v); });
+  $('#bPrev').addEventListener('click', () => step(-1));
+  $('#bNext').addEventListener('click', () => step(1));
+  $('#bRand').addEventListener('click', () => { let n; do { n = IDS[Math.floor(Math.random() * IDS.length)]; } while (n === cur && IDS.length > 1); pick(n); });
   $('#bSave').addEventListener('click', savePng);
-  $('#bUnequip').addEventListener('click', () => unequip(sel));
-  // 清理无效存档
-  for (const s of Object.keys(eq)) if (!SLOTS[s] || !SLOT_ORDER.includes(s) || !PARTS[eq[s]] || !slotFits(s, PARTS[eq[s]])) delete eq[s];
+  document.addEventListener('keydown', e => { if (!document.body.classList.contains('stage-build')) return;
+    if (e.key === 'ArrowLeft') step(-1); else if (e.key === 'ArrowRight') step(1); else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') setView(view === 'side' ? 'iso' : 'side'); });
 }
-async function open(){
-  await init();
-  document.querySelectorAll('#bFig img.bp').forEach(i => i.remove());
-  refresh();
+function open(){
+  init();
+  let s = null; try { s = localStorage.getItem('orion.pick'); } catch (e) {}
+  const host = $('#bFig'); host.innerHTML = ''; host.dataset.key = '';
+  pick(SBY[s] ? s : IDS[0], true);
 }
-window.OrionBuild = { _set: o => { eq = o; refresh(); }, open, _calc: calc, _eq: () => eq, _preset: preset };
+window.OrionBuild = { open, _calc: calc, _eq: () => eq, _pick: pick, _view: setView };
 })();
-
-
-
-
-
-
-
-
-
 
