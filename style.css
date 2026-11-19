@@ -204,6 +204,7 @@ body.stage-hub .hub{opacity:1;pointer-events:auto}
 body.stage-hub .hub-zoom{transform:none;filter:none}
 .hub-canvas{position:absolute;will-change:transform;transform-origin:50% 50%}
 .hl{position:absolute;inset:0}
+#stageBack,#stageBack *,#stageFront,#stageFront *,#hubfar,#mist,#rays,#rings{pointer-events:none}
 .hl-bg,.hl-mech,.hl-armorglow,.hl-headimg{background-image:url(assets/hub-bg.jpg);background-size:100% 100%;background-repeat:no-repeat}
 .hl-mech{-webkit-mask:url(assets/mask-mech.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-mech.png) 0 0/100% 100% no-repeat}
 
