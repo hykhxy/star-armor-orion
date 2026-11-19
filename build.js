@@ -1,4 +1,4 @@
-/* =====================================================
+﻿/* =====================================================
    build.js —— 组装机甲:透明骨架 · 自由组装 · 预设 · 数值结算
    数值规则取自世界卡:
    战力 = 基础出力 × 品质系数 × 耦合率% × 协同倍率;耦合率>95% 触发「完美谐振」+20% 峰值出力
@@ -38,15 +38,15 @@ const SBY = Object.fromEntries(SERIES.map(s => [s.id, s]));
 
 // 部位:module=对应六大模块;z=层级;H=目标高度(舞台 1000×1400 单位);cx/cy=中心;hit=热区
 const SLOTS = {
-  halo:   { cn: '光环 / 法相', mod: 'M-03 · 外甲辅助(I-立场)', z: 1, H: 340, cx: 500, cy: 185, hit: [500, 62, 220, 100] },
-  wings:  { cn: '背部推进 / 翼', mod: 'M-05 · 推进与机动总成', z: 2, H: 560, cx: 500, cy: 430, W: 1000, hit: [885, 410, 150, 300] },
-  weapon: { cn: '武装挂载', mod: 'M-06 · 武装与战术挂载', z: 3, H: 800, cx: 105, cy: 770, hit: [105, 770, 150, 800] },
-  legL:   { cn: '左腿', mod: 'M-05 · 推进 / M-02 · 关节', z: 4, H: 640, cx: 565, cy: 1020, hit: [565, 1020, 170, 640] },
-  legR:   { cn: '右腿', mod: 'M-05 · 推进 / M-02 · 关节', z: 4, H: 640, cx: 435, cy: 1020, hit: [435, 1020, 170, 640] },
-  torso:  { cn: '躯干 / 炉心', mod: 'M-01 · 动力炉心 / M-03 · 外甲', z: 5, H: 440, cx: 500, cy: 505, hit: [500, 505, 210, 440] },
-  armL:   { cn: '左臂', mod: 'M-02 · 骨架 / M-06 · 挂点', z: 6, H: 560, cx: 718, cy: 585, hit: [718, 585, 250, 560] },
-  armR:   { cn: '右臂', mod: 'M-02 · 骨架 / M-06 · 挂点', z: 6, H: 560, cx: 282, cy: 585, hit: [282, 585, 250, 560] },
-  head:   { cn: '头部 / 传感', mod: 'M-04 · 神经传感与火控', z: 7, H: 215, cx: 500, cy: 205, hit: [500, 205, 250, 230] },
+  halo:   { cn: '光环 / 法相', mod: 'M-03 · 外甲辅助(I-立场)', z: 1, H: 340, cx: 500, cy: 185, hit: [500, 60, 240, 80] },
+  wings:  { cn: '背部推进 / 翼', mod: 'M-05 · 推进与机动总成', z: 2, H: 560, cx: 500, cy: 430, W: 1000, hit: [500, 292, 640, 34] },
+  weapon: { cn: '武装挂载', mod: 'M-06 · 武装与战术挂载', z: 3, H: 800, cx: 105, cy: 770, hit: [115, 1100, 110, 520] },
+  legL:   { cn: '左腿', mod: 'M-05 · 推进 / M-02 · 关节', z: 4, H: 640, cx: 565, cy: 1020, hit: [565, 1000, 170, 700] },
+  legR:   { cn: '右腿', mod: 'M-05 · 推进 / M-02 · 关节', z: 4, H: 640, cx: 435, cy: 1020, hit: [435, 1000, 170, 700] },
+  torso:  { cn: '躯干 / 炉心', mod: 'M-01 · 动力炉心 / M-03 · 外甲', z: 5, H: 440, cx: 500, cy: 505, hit: [500, 535, 190, 440] },
+  armL:   { cn: '左臂', mod: 'M-02 · 骨架 / M-06 · 挂点', z: 6, H: 560, cx: 718, cy: 585, hit: [715, 560, 190, 480] },
+  armR:   { cn: '右臂', mod: 'M-02 · 骨架 / M-06 · 挂点', z: 6, H: 560, cx: 282, cy: 585, hit: [285, 560, 190, 480] },
+  head:   { cn: '头部 / 传感', mod: 'M-04 · 神经传感与火控', z: 7, H: 215, cx: 500, cy: 205, hit: [500, 190, 200, 260] },
 };
 const SLOT_ORDER = ['head', 'torso', 'armR', 'armL', 'legR', 'legL', 'wings', 'weapon', 'halo'];
 const kindOf = s => s.startsWith('arm') ? 'arm' : s.startsWith('leg') ? 'leg' : s;
@@ -155,27 +155,62 @@ function calc(){
 
 /* ---------- 渲染:舞台 ---------- */
 const stage = () => $('#bStage');
-function geom(slot, p){
-  const S = SLOTS[slot === 'halo2' ? 'halo' : slot], dim = MAN[p.sid][p.slot], asp = dim[0] / dim[1];
-  let H = S.H, cx = S.cx, cy = S.cy;
-  if (p.slot === 'halo2'){ H = 980; cy = 610; }
-  let W = H * asp; if (S.W && W > S.W){ W = S.W; H = W / asp; }
-  if (slot === 'halo' && p.slot === 'halo' && asp > 1.15) { W = Math.min(W, 460); H = W / asp; }
-  return { W, H, cx, cy };
+function F(sid, slot){ return MAN[sid] && MAN[sid][slot] ? MAN[sid][slot][2] : null; }
+/* 按接口实测数据逐件对位:颈口、肩线、髋部都以零件本身的轮廓为准,保证严丝合缝 */
+function layout(){
+  const out = {}, CX = 500, YT = 300, Ht = 470;
+  const tp = eq.torso && PARTS[eq.torso], tsid = tp ? tp.sid : 'gen', tf = F(tsid, 'torso'), td = MAN[tsid].torso;
+  const st = Ht / td[1], tw = td[0] * st;
+  if (tp) out.torso = { x: CX - tf.neckX * st, y: YT, w: tw, h: Ht, z: 5 };
+  const pk = s => eq[s] && PARTS[eq[s]];
+  const h = pk('head');
+  let hc = { y: YT - 40, h: 0 };
+  if (h){
+    const d = MAN[h.sid].head; let sh = .62 * Ht / d[1]; if (d[0] * sh > 1.5 * tw) sh = 1.5 * tw / d[0];
+    const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + (.09 + ({ havoc: .09, gen: .03 }[tsid] || 0)) * Ht;
+    out.head = { x: CX - F(h.sid, 'head').colX * sh, y: yb - hh, w: hw, h: hh, z: 4 }; hc = { y: yb - hh, h: hh };
+  }
+  const hipW = (tf.hipR - tf.hipL) * st;
+  const legs = ['legL', 'legR'].filter(k => pk(k)), tops = legs.map(k => F(pk(k).sid, k).topW);
+  const sLeg0 = legs.length ? hipW / (2 * tops.reduce((a, b) => a + b, 0) / tops.length) : 1;
+  for (const k of legs){
+    const p = pk(k), d = MAN[p.sid][k], f = F(p.sid, k);
+    const lh = Math.max(1.25 * Ht, Math.min(1.55 * Ht, d[1] * sLeg0)), s = lh / d[1], side = k === 'legL' ? 1 : -1;
+    out[k] = { x: CX + side * (f.topW * s * .5 - 2) - f.topX * s, y: YT + .72 * Ht, w: d[0] * s, h: lh, z: 3 };
+  }
+  for (const k of ['armL', 'armR']){
+    const p = pk(k); if (!p) continue;
+    const d = MAN[p.sid][k], f = F(p.sid, k), s = Ht / d[1], side = k === 'armL' ? 1 : -1;
+    const edge = side > 0 ? tf.shR : tf.shL, ex = CX + side * Math.abs(edge - tf.neckX) * st, inner = side > 0 ? f.x0 : f.x1;
+    out[k] = { x: ex - side * .04 * tw - inner * s, y: YT + .02 * Ht, w: d[0] * s, h: d[1] * s, z: 6 };
+  }
+  const wp = pk('weapon');
+  if (wp){ const d = MAN[wp.sid].weapon, hh = 1.7 * Ht, ww = d[0] / d[1] * hh; out.weapon = { x: 70, y: 1365 - hh, w: ww, h: hh, z: 7 }; }
+  const wg = pk('wings');
+  if (wg){ const d = MAN[wg.sid].wings; let hh = 1.3 * Ht, ww = d[0] / d[1] * hh; if (ww > 980){ ww = 980; hh = ww * d[1] / d[0]; }
+    out.wings = { x: CX - ww / 2, y: YT + .42 * Ht - hh / 2, w: ww, h: hh, z: 2 }; }
+  const ha = pk('halo');
+  if (ha){ const d = MAN[ha.sid][ha.slot];
+    if (ha.slot === 'halo2'){ const hh = 1000, ww = d[0] / d[1] * hh; out.halo = { x: CX - ww / 2, y: 140, w: ww, h: hh, z: 0 }; }
+    else { let hh = 1.0 * Ht, ww = d[0] / d[1] * hh; if (ww > 560){ ww = 560; hh = ww * d[1] / d[0]; }
+      out.halo = { x: CX - ww / 2, y: hc.y + hc.h * .5 - hh / 2, w: ww, h: hh, z: 1 }; } }
+  return out;
 }
 function renderStage(anim){
   const host = $('#bFig'); if (!host) return;
   host.querySelectorAll('img.bp').forEach(i => { if (!eq[i.dataset.slot] || eq[i.dataset.slot] !== i.dataset.key) i.remove(); });
+  const L = layout();
   for (const slot of SLOT_ORDER){
-    const key = eq[slot]; if (!key) continue;
+    const key = eq[slot]; if (!key || !L[slot]) continue;
     let img = host.querySelector(`img.bp[data-slot="${slot}"]`);
-    if (img && img.dataset.key === key) continue;
-    const p = PARTS[key], g = geom(slot, p);
-    img = document.createElement('img'); img.className = 'bp' + (anim === slot ? ' drop' : '');
-    img.dataset.slot = slot; img.dataset.key = key; img.draggable = false; img.alt = p.full;
-    img.src = `assets/parts/${p.sid}/${p.slot}.webp`;
-    img.style.cssText = `left:${g.cx / 10}%;top:${g.cy / 14}%;width:${g.W / 10}%;height:${g.H / 14}%;z-index:${p.slot === 'halo2' ? 0 : SLOTS[slot].z}`;
-    host.appendChild(img);
+    if (!img || img.dataset.key !== key){
+      const p = PARTS[key];
+      img = document.createElement('img'); img.className = 'bp' + (anim === slot ? ' drop' : '');
+      img.dataset.slot = slot; img.dataset.key = key; img.draggable = false; img.alt = p.full;
+      img.src = `assets/parts/${p.sid}/${p.slot}.webp`; host.appendChild(img);
+    }
+    const g = L[slot];
+    img.style.cssText = `left:${(g.x + g.w / 2) / 10}%;top:${(g.y + g.h / 2) / 14}%;width:${g.w / 10}%;height:${g.h / 14}%;z-index:${g.z}`;
   }
   document.querySelectorAll('#bHit .hz').forEach(h => {
     h.classList.toggle('filled', !!eq[h.dataset.slot]); h.classList.toggle('sel', h.dataset.slot === sel);
@@ -290,5 +325,8 @@ async function open(){
   document.querySelectorAll('#bFig img.bp').forEach(i => i.remove());
   refresh();
 }
-window.OrionBuild = { open, _calc: calc, _eq: () => eq, _preset: preset };
+window.OrionBuild = { _set: o => { eq = o; refresh(); }, open, _calc: calc, _eq: () => eq, _preset: preset };
 })();
+
+
+
