@@ -70,3 +70,5 @@
 .warns p{margin:4px 0;padding:6px 8px;font-size:11.5px;line-height:1.5;border-left:3px solid}
 .warns .err{color:#ff9a9a;border-color:#ff4a4a;background:rgba(255,74,74,.08)}.warns .warn{color:#ffd884;border-color:#ffc24a;background:rgba(255,194,74,.07)}.warns .info{color:#9fd8ea;border-color:#5ff3ff;background:rgba(95,243,255,.06)}
 @media(max-width:900px){.build{overflow:auto}.b-main{grid-template-columns:1fr;overflow:visible}.b-stage{height:70vh;flex:none}.b-lib{max-height:50vh}.b-presets-wrap{max-width:100%}.b-head{flex-wrap:wrap}}
+
+.b-skel g[fill=none]{display:none}
