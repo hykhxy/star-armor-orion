@@ -182,7 +182,10 @@ function layout(){
     }
     const lx = rp.p[0] * u, ly = rp.p[1] * u;                    // 零件上的插头
     const a = rot ? rp.a : 0, r = a * Math.PI / 180, dx = w / 2 - lx, dy = h / 2 - ly;
-    out[slot] = { cx: Wx + dx * Math.cos(r) - dy * Math.sin(r), cy: Wy + dx * Math.sin(r) + dy * Math.cos(r), w, h, a, z };
+    let ox = 0, oy = 0;
+    if (slot === 'head') oy = (window.ORION_HD != null ? window.ORION_HD : .24) * h;      // 头压进颈口,盖住接缝
+    if (slot.startsWith('arm')){ ox = (slot === 'armL' ? -1 : 1) * (window.ORION_AX != null ? window.ORION_AX : .07) * tw; oy = (window.ORION_AY != null ? window.ORION_AY : .02) * th; }  // 手臂向躯干收拢
+    out[slot] = { cx: Wx + ox + dx * Math.cos(r) - dy * Math.sin(r), cy: Wy + oy + dx * Math.sin(r) + dy * Math.cos(r), w, h, a, z };
   };
   put('legL', 3, true); put('legR', 3, true); put('armL', 6, true); put('armR', 6, true); put('head', 8, false); put('weapon', 7, false);
   // 整体适配舞台:过大时等比缩小,超出边界时平移
