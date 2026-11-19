@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="fx.css">
 <link rel="stylesheet" href="world.css">
 <link rel="stylesheet" href="build.css">
+<script>
+window.ORION_CDN='https://gcore.jsdelivr.net/gh/hykhxy/star-armor-orion@main/';
+document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('img[src^="assets/"]').forEach(function(i){var o=i.getAttribute('src');i.onerror=function(){i.onerror=null;i.src=o};i.src=window.ORION_CDN+o})});
+</script>
 </head>
 <body class="stage-boot">
 
@@ -472,4 +476,5 @@
 <script src="main.js"></script>
 </body>
 </html>
+
 
