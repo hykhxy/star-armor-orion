@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
 'use strict';
 const $ = s => document.querySelector(s);
 const body = document.body;
@@ -226,7 +226,7 @@ const N = SLOT.length;
 const ORBS = [
   { key: 'create', cn: '创造角色', en: 'CREATE PILOT',   desc: '设定你的驾驶员 —— 姓名、代号、出身星域与同步率。选择三个起点身份之一,开始你的拆装人生。' },
   { key: 'author', cn: '作者的话', en: "AUTHOR'S NOTE",  desc: '来自创作者的留言、设计笔记与致谢。' },
-  { key: 'build',  cn: '组装机甲', en: 'ASSEMBLE MECHA', desc: '挑选六大模块:炉心、骨架、外甲、神经中枢、推进与武装,拼装属于你的贴身机甲与高达。' },
+  { key: 'build',  cn: '选择机甲', en: 'SELECT MECHA', desc: '走进机库,从十一台整机中挑选属于你的贴身机甲,查看侧身与对角正交的全貌与数值。' },
   { key: 'world',  cn: '世界观',   en: 'WORLDVIEW',      desc: '' },
   { key: 'codex',  cn: '角色图鉴', en: 'CODEX',          desc: '收录十二大势力、具名人物与七十二款机体的档案。' },
 ];
