@@ -166,7 +166,9 @@ function layout(){
   const h = pk('head');
   let hc = { y: YT - 40, h: 0 };
   if (h){
-    const d = MAN[h.sid].head; let sh = .5 * Ht / d[1]; if (d[0] * sh > 1.05 * tw) sh = 1.05 * tw / d[0]; if (d[0] * sh < .62 * tw) sh = Math.min(.62 * tw / d[0], .62 * Ht / d[1]);
+    const d = MAN[h.sid].head, tdh = MAN[h.sid].torso || td, twh = tdh[0] * Ht / tdh[1];
+    let s0 = .5 * Ht / d[1]; if (d[0] * s0 > 1.05 * twh) s0 = 1.05 * twh / d[0]; if (d[0] * s0 < .62 * twh) s0 = Math.min(.62 * twh / d[0], .62 * Ht / d[1]);
+    const sh = (d[0] * s0 / twh) * ({ gen: 1.12 }[h.sid] || 1) * tw / d[0];
     const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + (.075 + ({ havoc: .16, gen: .04, abyss: .03 }[tsid] || 0)) * Ht;
     out.head = { x: CX - F(h.sid, 'head').colX * sh, y: yb - hh, w: hw, h: hh, z: 8 }; hc = { y: yb - hh, h: hh };
   }
@@ -366,6 +368,8 @@ async function open(){
 }
 window.OrionBuild = { _set: o => { eq = o; refresh(); }, open, _calc: calc, _eq: () => eq, _preset: preset };
 })();
+
+
 
 
 
