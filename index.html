@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="fx.css">
 <link rel="stylesheet" href="world.css">
+<link rel="stylesheet" href="build.css">
 </head>
 <body class="stage-boot">
 
@@ -425,7 +426,49 @@
   </div>
 </section>
 
+<!-- 组装机甲 -->
+<section class="build" id="build">
+  <header class="b-head">
+    <button class="w-back2 b-back" id="bBack">◂ RETURN</button>
+    <div class="b-title"><p class="eyebrow">M-01 ~ M-06 · ASSEMBLY BAY</p><h2>组装机甲</h2></div>
+    <div class="b-presets-wrap"><small>预设机体</small><div class="b-presets" id="bPresets"></div></div>
+  </header>
+  <div class="b-main">
+    <aside class="b-lib">
+      <div class="b-tabs" id="bTabs"></div>
+      <div class="b-slot" id="bSlotInfo"></div>
+      <div class="b-list" id="bList"></div>
+    </aside>
+    <div class="b-stagewrap">
+      <div class="b-stage" id="bStage">
+        <svg class="b-skel" viewBox="0 0 1000 1400" aria-hidden="true">
+          <defs><linearGradient id="skg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ff3ff"/><stop offset="1" stop-color="#2a6fd6"/></linearGradient></defs>
+          <g fill="none" stroke="url(#skg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".75">
+            <circle cx="500" cy="205" r="62"/><path d="M500 267v40"/>
+            <path d="M390 330h220l30 60-24 230-56 60h-140l-56-60-24-230z"/>
+            <path d="M500 330v350M440 420h120M446 520h108"/>
+            <path d="M390 335 330 470 300 640 292 790M610 335 670 470 700 640 708 790"/>
+            <circle cx="390" cy="335" r="14"/><circle cx="610" cy="335" r="14"/><circle cx="300" cy="640" r="10"/><circle cx="700" cy="640" r="10"/>
+            <path d="M440 680 428 880 420 1070 414 1300M560 680 572 880 580 1070 586 1300"/>
+            <circle cx="428" cy="880" r="12"/><circle cx="572" cy="880" r="12"/>
+            <path d="M390 1330h50M560 1330h50"/>
+          </g>
+          <g stroke="#5ff3ff" stroke-opacity=".12"><path d="M0 700H1000M500 0V1400"/></g>
+          <ellipse cx="500" cy="1345" rx="300" ry="26" fill="none" stroke="#5ff3ff" stroke-opacity=".35"/>
+          <ellipse cx="500" cy="1345" rx="200" ry="16" fill="none" stroke="#5ff3ff" stroke-opacity=".25"/>
+        </svg>
+        <div class="b-fig" id="bFig"></div>
+        <svg class="b-hit" id="bHit" viewBox="0 0 1000 1400"></svg>
+      </div>
+      <p class="b-tip">点击部位热区选择 · 从右侧点选或拖入零件 · 双击热区卸下</p>
+      <div class="b-acts"><button id="bUnequip">卸下当前部位</button><button id="bRand">随机组装</button><button id="bClear">清空机架</button></div>
+    </div>
+    <aside class="b-stats" id="bStats"></aside>
+  </div>
+</section>
+
 <audio id="welcomeAudio" src="assets/welcome-master.mp3" preload="auto"></audio>
+<script src="build.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
