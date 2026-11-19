@@ -63,3 +63,6 @@
 .s-meta dd.q0,.s-meta dd.q1,.s-meta dd.q2,.s-meta dd.q3,.s-meta dd.q4,.s-meta dd.q5{font-size:14px}
 @media(max-width:900px){.b-list{grid-template-columns:repeat(3,1fr)}.b-stage{height:70vh;max-width:100%}.b-view{margin-left:0}}
 
+.b-acts button.b-go{background:linear-gradient(90deg,#1a8fb0,#5ff3ff);color:#031018;border-color:#5ff3ff;font-weight:700;letter-spacing:.2em;padding:6px 22px;box-shadow:0 0 16px rgba(95,243,255,.35)}
+.b-acts button.b-go:hover{filter:brightness(1.15)}
+.b-acts button.b-go.ok{background:#7dffb0;border-color:#7dffb0}
