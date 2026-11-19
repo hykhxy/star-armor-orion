@@ -22,17 +22,11 @@ const mid = t => { const b = BANDS[clamp(t, 1, 8) - 1]; return Math.sqrt(b[0] * 
 const fmtKW = v => v >= 1e6 ? (v / 1e6).toFixed(2) + ' GW' : v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 1 : 2) + ' MW' : v.toFixed(v >= 100 ? 0 : 1) + ' kW';
 
 const SERIES = [
-  { id: 'gen',    cn: '通用机甲',   t: 2, q: 1, b: [1, 1, 1, 1],           light: false },
-  { id: 'monkey', cn: '齐天大圣',   t: 3, q: 2, b: [1.1, 1.1, 1.2, .9],    light: true },
-  { id: 'falcon', cn: '苍穹猎隼',   t: 3, q: 2, b: [.8, 1.45, 1, 1.2],     light: true },
   { id: 'seraph', cn: '圣翼天使',   t: 4, q: 3, b: [.95, 1.2, 1, 1.15],    light: true },
   { id: 'star',   cn: '星际机甲',   t: 4, q: 3, b: [1, 1.05, 1.1, 1.1],     light: false },
-  { id: 'luna',   cn: '月亮神',     t: 4, q: 3, b: [.9, 1.15, .95, 1.45],   light: true },
-  { id: 'cat',    cn: '头头猫',     t: 4, q: 3, b: [1, 1.1, 1, 1.2],        light: false },
   { id: 'abyss',  cn: '深渊恶魔',   t: 5, q: 4, b: [1.2, 1, 1.25, .95],     light: false },
   { id: 'havoc',  cn: '破坏神',     t: 5, q: 4, b: [1.45, .75, 1.4, .8],    light: false },
   { id: 'sol',    cn: '太阳神',     t: 6, q: 4, b: [1.1, 1, 1.35, 1.1],     light: false },
-  { id: 'sky',    cn: '天空之神',   t: 6, q: 4, b: [.9, 1.35, 1.1, 1.3],    light: true },
 ];
 const SBY = Object.fromEntries(SERIES.map(s => [s.id, s]));
 
@@ -41,14 +35,14 @@ const SLOTS = {
   halo:   { cn: '光环 / 法相', mod: 'M-03 · 外甲辅助(I-立场)', z: 1, H: 340, cx: 500, cy: 185, hit: [500, 60, 240, 80] },
   wings:  { cn: '背部推进 / 翼', mod: 'M-05 · 推进与机动总成', z: 2, H: 560, cx: 500, cy: 430, W: 1000, hit: [500, 292, 640, 34] },
   weapon: { cn: '武装挂载', mod: 'M-06 · 武装与战术挂载', z: 3, H: 800, cx: 105, cy: 770, hit: [115, 1100, 110, 520] },
-  legL:   { cn: '左腿', mod: 'M-05 · 推进 / M-02 · 关节', z: 4, H: 640, cx: 565, cy: 1020, hit: [565, 1000, 170, 700] },
+  legL:   { cn: '双腿', mod: 'M-05 · 推进 / M-02 · 关节', z: 4, H: 640, cx: 565, cy: 1020, hit: [565, 1000, 170, 700] },
   legR:   { cn: '右腿', mod: 'M-05 · 推进 / M-02 · 关节', z: 4, H: 640, cx: 435, cy: 1020, hit: [435, 1000, 170, 700] },
   torso:  { cn: '躯干 / 炉心', mod: 'M-01 · 动力炉心 / M-03 · 外甲', z: 5, H: 440, cx: 500, cy: 505, hit: [500, 535, 190, 440] },
-  armL:   { cn: '左臂', mod: 'M-02 · 骨架 / M-06 · 挂点', z: 6, H: 560, cx: 718, cy: 585, hit: [715, 560, 190, 480] },
+  armL:   { cn: '双臂', mod: 'M-02 · 骨架 / M-06 · 挂点', z: 6, H: 560, cx: 718, cy: 585, hit: [715, 560, 190, 480] },
   armR:   { cn: '右臂', mod: 'M-02 · 骨架 / M-06 · 挂点', z: 6, H: 560, cx: 282, cy: 585, hit: [285, 560, 190, 480] },
   head:   { cn: '头部 / 传感', mod: 'M-04 · 神经传感与火控', z: 7, H: 215, cx: 500, cy: 205, hit: [500, 190, 200, 260] },
 };
-const SLOT_ORDER = ['head', 'torso', 'armR', 'armL', 'legR', 'legL', 'wings', 'weapon', 'halo'];
+const SLOT_ORDER = ['head', 'torso', 'armR', 'armL', 'legR', 'legL'];
 const kindOf = s => s.startsWith('arm') ? 'arm' : s.startsWith('leg') ? 'leg' : s;
 const MULT = {
   head:   { se: 1.5, ar: .35, at: .2, w: 3 },
@@ -83,13 +77,13 @@ function mkPart(sid, slot){
 function buildLibrary(){
   for (const sid of Object.keys(MAN)) for (const slot of Object.keys(MAN[sid])) PARTS[sid + '/' + slot] = mkPart(sid, slot);
 }
-const slotFits = (slot, p) => slot === 'halo' ? (p.slot === 'halo' || p.slot === 'halo2') : p.slot === slot;
+const slotFits = (slot, p) => p.slot === (slot === 'armR' ? 'armL' : slot === 'legR' ? 'legL' : slot);
 const partsFor = slot => Object.values(PARTS).filter(p => slotFits(slot, p)).sort((a, b) => a.t - b.t || a.q - b.q);
 
 /* ---------- 状态 ---------- */
 let eq = {};                          // slot -> part key
 let sel = 'torso';
-try { eq = JSON.parse(localStorage.getItem('orion.build') || '{}') || {}; } catch (e) { eq = {}; }
+try { eq = JSON.parse(localStorage.getItem('orion.build2') || '{}') || {}; } catch (e) { eq = {}; }
 
 /* ---------- 数值结算 ---------- */
 function calc(){
@@ -156,106 +150,66 @@ function calc(){
 /* ---------- 渲染:舞台 ---------- */
 const stage = () => $('#bStage');
 function F(sid, slot){ return MAN[sid] && MAN[sid][slot] ? MAN[sid][slot][2] : null; }
-/* 接口对位:每套零件由 SIFT 匹配回整机原图,得到「零件缩放 + 插头位置 + 躯干上的插座位置」。
-   混搭时:插座取自当前躯干(它决定手臂、腿、头接在哪),插头取自零件自己(它决定零件哪一点接上去),
-   缩放各按本系列在原图里的真实比例,所以头、手、腿天然与躯干匹配。 */
-let RIG = null;
-const HF = 1320;                                   // 原图整机高度映射到舞台的像素
-const ru = (sid, s) => s * HF / RIG[sid].torso.fh;  // 零件像素 → 舞台像素
+/* ===== 对角正交视角 · 四件式零件(头 / 躯干 / 双臂 / 双腿)=====
+   每套零件出自同一张母图,同系列拼装即原位还原;混搭时用「接口点」对位:
+   头底 ↔ 躯干领口,双臂肩头 ↔ 躯干肩座,双腿髋球 ↔ 躯干髋座。
+   遮挡顺序:后臂 → 双腿 → 躯干 → 头 → 前臂。 */
+let ISO = null;
+const cdn = p => (window.ORION_CDN || '') + p;
+const FILE = { head: 'head', torso: 'torso', armL: 'armF', legL: 'legs' };
+const UI_ORDER = ['head', 'torso', 'armL', 'legL'];
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 function layout(){
-  const out = {}, CX = 500;
-  const pk = s => eq[s] && PARTS[eq[s]];
-  const tp = pk('torso'), tsid = tp ? tp.sid : 'gen', rt = RIG[tsid];
-  const tu = ru(tsid, rt.torso.s), tw = rt.torso.w * tu, th = rt.torso.h * tu;
-  const tx = CX - tw / 2, ty = 60 + rt.torso.t0 * HF;
-  if (tp) out.torso = { cx: tx + tw / 2, cy: ty + th / 2, w: tw, h: th, a: 0, z: 5 };
-  const put = (slot, z, rot) => {
-    const p = pk(slot); if (!p) return;
-    const rp = RIG[p.sid] && RIG[p.sid][slot]; if (!rp) return;
-    const sk = (rt[slot] && rt[slot].sock) || RIG._avg[slot];
-    let u = ru(p.sid, rp.s);
-    const pairK = slot.startsWith('leg') ? ['legL', 'legR'] : slot.startsWith('arm') ? ['armL', 'armR'] : null;
-    if (pairK){   // 左右成对零件来自不同系列时,统一到同一高度,避免一长一短、接口错位
-      const hs = pairK.map(k => { const q = pk(k), r2 = q && RIG[q.sid] && RIG[q.sid][k]; return r2 ? r2.ph * ru(q.sid, r2.s) : null; }).filter(v => v);
-      if (hs.length === 2){ const mean = (hs[0] + hs[1]) / 2; u = mean / rp.ph; }
-    }
-    const w = rp.pw * u, h = rp.ph * u;
-    let Wx = tx + sk[0] * tw; const Wy = ty + sk[1] * th;        // 躯干上的插座
-    if (slot.startsWith('arm') && p.sid !== tsid && rt[slot] && rt[slot].ie != null && rp.ie != null){
-      // 内缘对齐:异系手臂的内侧边,贴到躯干自带手臂的内侧边(肩甲宽窄不同也不会脱开)
-      const ieA = rt[slot].ie * ru(tsid, rt[slot].s), ieB = rp.ie * u;
-      Wx += slot === 'armL' ? (ieB - ieA) : (ieA - ieB);
-    }
-    const lx = rp.p[0] * u, ly = rp.p[1] * u;                    // 零件上的插头
-    const a = rot ? rp.a : 0, r = a * Math.PI / 180, dx = w / 2 - lx, dy = h / 2 - ly;
-    let ox = 0, oy = 0;
-    if (slot === 'head') oy = (window.ORION_HD != null ? window.ORION_HD : .24) * h;      // 头压进颈口,盖住接缝
-    if (slot.startsWith('arm')){ ox = (slot === 'armL' ? -1 : 1) * (window.ORION_AX != null ? window.ORION_AX : .07) * tw; oy = (window.ORION_AY != null ? window.ORION_AY : .02) * th; }  // 手臂向躯干收拢
-    out[slot] = { cx: Wx + ox + dx * Math.cos(r) - dy * Math.sin(r), cy: Wy + oy + dx * Math.sin(r) + dy * Math.cos(r), w, h, a, z };
-  };
-  put('legL', 3, true); put('legR', 3, true); put('armL', 6, true); put('armR', 6, true); put('head', 8, false); put('weapon', 7, false);
-  // 整体适配舞台:过大时等比缩小,超出边界时平移
-  const ks = Object.keys(out);
-  if (ks.length){
-    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
-    for (const k of ks){ const g = out[k]; x0 = Math.min(x0, g.cx - g.w / 2); x1 = Math.max(x1, g.cx + g.w / 2); y0 = Math.min(y0, g.cy - g.h / 2); y1 = Math.max(y1, g.cy + g.h / 2); }
-    const k = Math.min(1, 1330 / (y1 - y0), 960 / (x1 - x0)), Y0 = Math.max(40, Math.min(y0, 1360 - (y1 - y0) * k));
-    const nx0 = 500 + (x0 - 500) * k, nx1 = 500 + (x1 - 500) * k, dx = nx0 < 20 ? 20 - nx0 : (nx1 > 980 ? 980 - nx1 : 0);
-    for (const q of ks){ const g = out[q]; g.cx = 500 + (g.cx - 500) * k + dx; g.cy = Y0 + (g.cy - y0) * k; g.w *= k; g.h *= k; }
-  }
-  const T = out.torso || { cx: 500, cy: 500, w: tw, h: th }, H = out.head;
-  const wg = pk('wings');
-  if (wg){ const d = MAN[wg.sid].wings; let hh = 1.3 * T.h, ww = d[0] / d[1] * hh; if (ww > 980){ ww = 980; hh = ww * d[1] / d[0]; }
-    out.wings = { cx: T.cx, cy: T.cy - T.h * .08, w: ww, h: hh, a: 0, z: 2 }; }
-  const ha = pk('halo');
-  if (ha){ const d = MAN[ha.sid][ha.slot], hy = H ? H.cy : T.cy - T.h * .45;
-    if (ha.slot === 'halo2'){ const hh = 1000, ww = d[0] / d[1] * hh; out.halo = { cx: T.cx, cy: 640, w: ww, h: hh, a: 0, z: 0 }; }
-    else { let hh = 1.0 * T.h, ww = d[0] / d[1] * hh; if (ww > 560){ ww = 560; hh = ww * d[1] / d[0]; }
-      out.halo = { cx: T.cx, cy: hy, w: ww, h: hh, a: 0, z: 1 }; } }
+  const g = k => eq[k] && PARTS[eq[k]];
+  const first = g('torso') || g('head') || g('armL') || g('legL');
+  const tsid = first ? first.sid : 'seraph', It = ISO[tsid];
+  const place = (b, pp, sock, s) => [sock[0] - (pp[0] - b[0]) * s, sock[1] - (pp[1] - b[1]) * s, b[2] * s, b[3] * s];
+  const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  const R = [];                                    // {id, slot, key, r:[x,y,w,h], z}
+  const T = g('torso'); if (T) R.push({ id: 'torso', slot: 'torso', file: 'torso', key: eq.torso, r: It.parts.torso.slice(), z: 5 });
+  const H = g('head');
+  if (H){ const ip = ISO[H.sid], s = H.sid === tsid ? 1 : clamp(It.torsoW / ip.torsoW, .6, 1.5);
+    const dx = (ip.plug.head[0] - ip.plug.collar[0]) * s, dy = (ip.plug.head[1] - ip.plug.collar[1]) * s;   // 头底相对本系列躯干领口的沉入量
+    const sock = [It.plug.collar[0] + dx, It.plug.collar[1] + dy];
+    R.push({ id: 'head', slot: 'head', file: 'head', key: eq.head, r: place(ip.parts.head, ip.plug.head, sock, s), z: 8 }); }
+  const A = g('armL');
+  if (A){ const ip = ISO[A.sid], same = A.sid === tsid;
+    const s = same ? 1 : clamp(dist(It.plug.armF, It.plug.armB) / dist(ip.plug.armF, ip.plug.armB), .75, 1.3);
+    const sm = mid(It.plug.armF, It.plug.armB), pm = mid(ip.plug.armF, ip.plug.armB);
+    R.push({ id: 'armB', slot: 'armL', file: 'armB', key: eq.armL, r: place(ip.parts.armB, pm, sm, s), z: 2 });
+    R.push({ id: 'armF', slot: 'armL', file: 'armF', key: eq.armL, r: place(ip.parts.armF, pm, sm, s), z: 9 }); }
+  const L = g('legL');
+  if (L){ const ip = ISO[L.sid], same = L.sid === tsid;
+    const s = same ? 1 : clamp(dist(It.plug.legL, It.plug.legR) / dist(ip.plug.legL, ip.plug.legR), .75, 1.3);
+    const sm = mid(It.plug.legL, It.plug.legR), pm = mid(ip.plug.legL, ip.plug.legR);
+    R.push({ id: 'legs', slot: 'legL', file: 'legs', key: eq.legL, r: place(ip.parts.legs, pm, sm, s), z: 3 }); }
+  // 舞台适配:以当前躯干系列的完整立绘为基准,混搭溢出时再整体缩小
+  const f = It.fig; let x0 = f[0], y0 = f[1], x1 = f[2], y1 = f[3];
+  for (const o of R){ x0 = Math.min(x0, o.r[0]); y0 = Math.min(y0, o.r[1]); x1 = Math.max(x1, o.r[0] + o.r[2]); y1 = Math.max(y1, o.r[1] + o.r[3]); }
+  const F = Math.min(1290 / (y1 - y0), 930 / (x1 - x0)), ox = 500 - (x0 + x1) / 2 * F, oy = 700 - (y0 + y1) / 2 * F;
+  const T2 = r => ({ cx: ox + (r[0] + r[2] / 2) * F, cy: oy + (r[1] + r[3] / 2) * F, w: r[2] * F, h: r[3] * F });
+  const out = { layers: R.map(o => Object.assign(o, T2(o.r), { a: 0 })), hit: [] };
+  const hz = [['armL', 'armB'], ['legL', 'legs'], ['torso', 'torso'], ['head', 'head']];     // 空位也要有热区:取躯干系列自己的位置
+  for (const [slot, k] of hz){ const t = T2(It.parts[k]); out.hit.push({ slot, x: t.cx - t.w / 2, y: t.cy - t.h / 2, w: t.w, h: t.h });
+    if (slot === 'armL'){ const u = T2(It.parts.armF); out.hit.push({ slot, x: u.cx - u.w / 2, y: u.cy - u.h / 2, w: u.w, h: u.h }); } }
   return out;
 }
-const cdn = p => (window.ORION_CDN || '') + p;
-const FULL = { seraph: [730, 1100], monkey: [703, 1100], abyss: [725, 1100], falcon: [635, 1100], sol: [676, 1100], star: [678, 1100],
-  havoc: [735, 1100], gen: [546, 1100], sky: [713, 1100], luna: [671, 1100], cat: [731, 1100] };
-/* 当前装备恰好是某一套预设的完整原件时,返回该套 id(此时直接显示整机原图) */
-function pureSid(){
-  const keys = Object.keys(eq); if (!keys.length) return null;
-  const sid = eq[keys[0]].split('/')[0]; if (!FULL[sid]) return null;
-  const want = {};
-  for (const slot of SLOT_ORDER){ const alt = slot === 'halo' ? (MAN[sid].halo ? 'halo' : null) : slot; if (alt && MAN[sid][alt]) want[slot] = sid + '/' + alt; }
-  const wk = Object.keys(want);
-  return wk.length === keys.length && wk.every(k => eq[k] === want[k]) ? sid : null;
-}
+function pureSid(){ return null; }
 function renderStage(anim){
   const host = $('#bFig'); if (!host) return;
-  const ps = pureSid(); let full = host.querySelector('img.bfull');
-  if (ps){
-    host.querySelectorAll('img.bp').forEach(i => i.remove());
-    const d = FULL[ps]; let h = 1340, w = d[0] / d[1] * h; if (w > 980){ w = 980; h = w * d[1] / d[0]; }
-    if (!full){ full = document.createElement('img'); full.className = 'bfull'; full.draggable = false; host.appendChild(full); }
-    if (full.dataset.sid !== ps){ full.dataset.sid = ps; full.src = cdn(`assets/full/${ps}.webp`); full.onerror = () => { full.onerror = null; full.src = `assets/full/${ps}.webp`; }; full.alt = ps; }
-    full._g = { cx: 500, cy: 700, w, h, a: 0, z: 5 }; full.style.cssText = `left:${500 / 10}%;top:${700 / 14}%;width:${w / 10}%;height:${h / 14}%;z-index:5`;
-    document.querySelectorAll('#bHit .hz').forEach(h2 => { h2.classList.toggle('filled', !!eq[h2.dataset.slot]); h2.classList.toggle('sel', h2.dataset.slot === sel); });
-    return;
-  }
-  if (full) full.remove();
-  host.querySelectorAll('img.bp').forEach(i => { if (!eq[i.dataset.slot] || eq[i.dataset.slot] !== i.dataset.key) i.remove(); });
-  const L = layout();
-  for (const slot of SLOT_ORDER){
-    const key = eq[slot]; if (!key || !L[slot]) continue;
-    let img = host.querySelector(`img.bp[data-slot="${slot}"]`);
-    if (!img || img.dataset.key !== key){
-      const p = PARTS[key];
-      img = document.createElement('img'); img.className = 'bp' + (anim === slot ? ' drop' : '');
-      img.dataset.slot = slot; img.dataset.key = key; img.draggable = false; img.alt = p.full;
-      img.src = cdn(`assets/parts/${p.sid}/${p.slot}.webp`); img.onerror = () => { img.onerror = null; img.src = `assets/parts/${p.sid}/${p.slot}.webp`; }; host.appendChild(img);
+  const L = layout(), keep = new Set(L.layers.map(o => o.id));
+  host.querySelectorAll('img.bp').forEach(i => { const o = L.layers.find(q => q.id === i.dataset.layer); if (!o || o.key !== i.dataset.key) i.remove(); });
+  for (const o of L.layers){
+    let img = host.querySelector(`img.bp[data-layer="${o.id}"]`);
+    if (!img){
+      const p = PARTS[o.key];
+      img = document.createElement('img'); img.className = 'bp' + (anim === o.slot ? ' drop' : ''); img.dataset.layer = o.id; img.dataset.slot = o.slot; img.dataset.key = o.key; img.draggable = false; img.alt = p.full;
+      const u = `assets/iso/${p.sid}/${o.file}.webp`; img.src = cdn(u); img.onerror = () => { img.onerror = null; img.src = u; }; host.appendChild(img);
     }
-    const g = L[slot];
-    img._g = g; img.style.cssText = `left:${g.cx / 10}%;top:${g.cy / 14}%;width:${g.w / 10}%;height:${g.h / 14}%;z-index:${g.z};rotate:${g.a || 0}deg;transform-origin:0 0`;
+    img._g = o; img.style.cssText = `left:${o.cx / 10}%;top:${o.cy / 14}%;width:${o.w / 10}%;height:${o.h / 14}%;z-index:${o.z}`;
   }
-  document.querySelectorAll('#bHit .hz').forEach(h => {
-    h.classList.toggle('filled', !!eq[h.dataset.slot]); h.classList.toggle('sel', h.dataset.slot === sel);
-  });
+  $('#bHit').innerHTML = L.hit.map(h => `<g class="hz" data-slot="${h.slot}"><rect x="${h.x}" y="${h.y}" width="${h.w}" height="${h.h}" rx="14"/><text x="${h.x + h.w / 2}" y="${h.y + 24}">${SLOTS[h.slot].cn.split(' ')[0]}</text></g>`).join('');
+  document.querySelectorAll('#bHit .hz').forEach(h => { h.classList.toggle('filled', !!eq[h.dataset.slot]); h.classList.toggle('sel', h.dataset.slot === sel); });
 }
 
 /* ---------- 渲染:零件库 ---------- */
@@ -270,11 +224,11 @@ function statChips(p){
 }
 function renderLib(){
   const list = $('#bList'), tabs = $('#bTabs');
-  tabs.innerHTML = SLOT_ORDER.map(s => `<button class="${s === sel ? 'on' : ''}${eq[s] ? ' has' : ''}" data-slot="${s}">${SLOTS[s].cn.split(' ')[0]}</button>`).join('');
+  tabs.innerHTML = UI_ORDER.map(s => `<button class="${s === sel ? 'on' : ''}${eq[s] ? ' has' : ''}" data-slot="${s}">${SLOTS[s].cn.split(' ')[0]}</button>`).join('');
   $('#bSlotInfo').innerHTML = `<b>${SLOTS[sel].cn}</b><i>${SLOTS[sel].mod}</i>`;
   const ps = partsFor(sel);
   list.innerHTML = ps.map(p => `<div class="pc ${QUAL[p.q].k}${eq[sel] === p.key ? ' on' : ''}" draggable="true" data-key="${p.key}">
-      <div class="pc-img"><img loading="lazy" src="assets/parts/${p.sid}/${p.slot}.webp" alt=""></div>
+      <div class="pc-img"><img loading="lazy" src="${cdn(`assets/iso/${p.sid}/${FILE[p.slot]}.webp`)}" alt=""></div>
       <div class="pc-t"><h5>${p.full}</h5><p><u class="qc ${QUAL[p.q].k}">${QUAL[p.q].n} ×${QUAL[p.q].c.toFixed(2)}</u><u class="tc">${ROMAN[p.t]}阶</u></p>
       <div class="pc-s">${statChips(p)}</div></div></div>`).join('') || '<p class="empty">此部位暂无零件</p>';
 }
@@ -298,24 +252,20 @@ function renderStats(){
       <div class="bar b-cp"><label>耦合率</label><div class="bt"><i style="width:${r.C}%"></i></div><b>${r.C.toFixed(1)}%</b></div>
       <div class="bar b-ht ${r.heatPct > 100 ? 'hot' : ''}"><label>热负荷</label><div class="bt"><i style="width:${clamp(r.heatPct / 2, 0, 100)}%"></i></div><b>${Math.round(r.heatPct)}%</b></div>
     </div>
-    <dl class="s-meta"><div><dt>整机耐久</dt><dd>${r.hpTotal}</dd></div><div><dt>整备重量</dt><dd>${r.wt.toFixed(1)} kg</dd></div><div><dt>摩托极速</dt><dd>${r.speed ? Math.round(r.speed) + ' km/h' : '—'}</dd></div><div><dt>已装部位</dt><dd>${r.n} / 9</dd></div></dl>
+    <dl class="s-meta"><div><dt>整机耐久</dt><dd>${r.hpTotal}</dd></div><div><dt>整备重量</dt><dd>${r.wt.toFixed(1)} kg</dd></div><div><dt>摩托极速</dt><dd>${r.speed ? Math.round(r.speed) + ' km/h' : '—'}</dd></div><div><dt>已装部位</dt><dd>${r.n} / 6</dd></div></dl>
     <div class="warns">${r.warns.map(([t, m]) => `<p class="${t}">${m}</p>`).join('')}</div>`;
 }
 
-function refresh(anim){ renderStage(anim); renderLib(); renderStats(); try { localStorage.setItem('orion.build', JSON.stringify(eq)); } catch (e) {} }
+function refresh(anim){ renderStage(anim); renderLib(); renderStats(); try { localStorage.setItem('orion.build2', JSON.stringify(eq)); } catch (e) {} }
 
 /* ---------- 操作 ---------- */
 function equip(slot, key){
   const p = PARTS[key]; if (!p || !slotFits(slot, p)) return;
-  eq[slot] = key; sel = slot; refresh(slot); sfx(720);
+  eq[slot] = key; if (slot === 'armL') eq.armR = key; if (slot === 'legL') eq.legR = key; sel = slot; refresh(slot); sfx(720);
 }
-function unequip(slot){ delete eq[slot]; refresh(); sfx(300); }
+function unequip(slot){ delete eq[slot]; if (slot === 'armL') delete eq.armR; if (slot === 'legL') delete eq.legR; refresh(); sfx(300); }
 function preset(sid){
-  eq = {};
-  for (const slot of SLOT_ORDER){
-    const alt = slot === 'halo' ? (MAN[sid].halo ? 'halo' : null) : slot;
-    if (alt && MAN[sid][alt]) eq[slot] = sid + '/' + alt;
-  }
+  eq = { head: sid + '/head', torso: sid + '/torso', armL: sid + '/armL', armR: sid + '/armL', legL: sid + '/legL', legR: sid + '/legL' };
   document.querySelectorAll('#bFig img.bp').forEach(i => i.remove());
   refresh(); document.querySelectorAll('#bFig img.bp').forEach((i, n) => { i.classList.add('drop'); i.style.animationDelay = n * 60 + 'ms'; });
   sfx(520);
@@ -337,28 +287,22 @@ function savePng(){
   });
 }function randomize(){
   eq = {};
-  for (const slot of SLOT_ORDER){
-    if ((slot === 'wings' || slot === 'halo' || slot === 'weapon') && Math.random() < .35) continue;
-    const ps = partsFor(slot); if (ps.length) eq[slot] = ps[Math.floor(Math.random() * ps.length)].key;
-  }
+  for (const slot of UI_ORDER){ const ps = partsFor(slot); if (ps.length) equipQuiet(slot, ps[Math.floor(Math.random() * ps.length)].key); }
   document.querySelectorAll('#bFig img.bp').forEach(i => i.remove()); refresh(); sfx(640);
 }
+function equipQuiet(slot, key){ eq[slot] = key; if (slot === 'armL') eq.armR = key; if (slot === 'legL') eq.legR = key; }
 function sfx(f){ try { window.OrionAudio && window.OrionAudio.blip(f, .09, 'triangle', .04, 200); } catch (e) {} }
 
 /* ---------- 初始化 ---------- */
 let inited = false;
 async function init(){
   if (inited) return; inited = true;
-  MAN = await (await fetch('assets/parts/manifest.json')).json();
-  RIG = await (await fetch(cdn('assets/parts/rig.json')).catch(() => fetch('assets/parts/rig.json'))).json();
+  ISO = await (await fetch(cdn('assets/iso/iso.json')).catch(() => fetch('assets/iso/iso.json'))).json();
+  MAN = Object.fromEntries(Object.keys(ISO).map(k => [k, { head: 1, torso: 1, armL: 1, legL: 1 }]));
   buildLibrary();
   // 预设芯片
   $('#bPresets').innerHTML = SERIES.map(s => `<button data-sid="${s.id}" title="${s.cn} · ${ROMAN[s.t]}阶 · ${QUAL[s.q].n}">
-    <img src="assets/parts/${s.id}/head.webp" alt=""><span>${s.cn}</span><i class="${QUAL[s.q].k}">${ROMAN[s.t]}</i></button>`).join('');
-  // 热区 + 骨架
-  const hz = SLOT_ORDER.map(s => { const [x, y, w, h] = SLOTS[s].hit;
-    return `<g class="hz" data-slot="${s}"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="14"/><text x="${x}" y="${y - h / 2 + 24}">${SLOTS[s].cn.split(' ')[0]}</text></g>`; }).join('');
-  $('#bHit').innerHTML = hz;
+    <img src="${cdn(`assets/iso/${s.id}/head.webp`)}" alt=""><span>${s.cn}</span><i class="${QUAL[s.q].k}">${ROMAN[s.t]}</i></button>`).join('');
   // 事件
   $('#bPresets').addEventListener('click', e => { const b = e.target.closest('button'); if (b) preset(b.dataset.sid); });
   $('#bTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ sel = b.dataset.slot; refresh(); } });
@@ -376,7 +320,7 @@ async function init(){
   $('#bSave').addEventListener('click', savePng);
   $('#bUnequip').addEventListener('click', () => unequip(sel));
   // 清理无效存档
-  for (const s of Object.keys(eq)) if (!SLOTS[s] || !PARTS[eq[s]] || !slotFits(s, PARTS[eq[s]])) delete eq[s];
+  for (const s of Object.keys(eq)) if (!SLOTS[s] || !SLOT_ORDER.includes(s) || !PARTS[eq[s]] || !slotFits(s, PARTS[eq[s]])) delete eq[s];
 }
 async function open(){
   await init();
