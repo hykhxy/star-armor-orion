@@ -166,8 +166,8 @@ function layout(){
   const h = pk('head');
   let hc = { y: YT - 40, h: 0 };
   if (h){
-    const d = MAN[h.sid].head; let sh = .36 * Ht / d[1]; if (d[0] * sh > .78 * tw) sh = .78 * tw / d[0];
-    const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + .075 * Ht;
+    const d = MAN[h.sid].head; let sh = .5 * Ht / d[1]; if (d[0] * sh > 1.05 * tw) sh = 1.05 * tw / d[0]; if (d[0] * sh < .62 * tw) sh = Math.min(.62 * tw / d[0], .62 * Ht / d[1]);
+    const hw = d[0] * sh, hh = d[1] * sh, yb = YT + tf.neckY * st + (.075 + ({ havoc: .16, gen: .04, abyss: .03 }[tsid] || 0)) * Ht;
     out.head = { x: CX - F(h.sid, 'head').colX * sh, y: yb - hh, w: hw, h: hh, z: 8 }; hc = { y: yb - hh, h: hh };
   }
   const hipW = (tf.hipR - tf.hipL) * st;
@@ -302,7 +302,22 @@ function preset(sid){
   refresh(); document.querySelectorAll('#bFig img.bp').forEach((i, n) => { i.classList.add('drop'); i.style.animationDelay = n * 60 + 'ms'; });
   sfx(520);
 }
-function randomize(){
+function savePng(){
+  const host = $('#bFig'); const imgs = [...host.querySelectorAll('img.bp,img.bfull')];
+  if (!imgs.length) return;
+  const cv = document.createElement('canvas'); cv.width = 1000; cv.height = 1400; const c = cv.getContext('2d');
+  const g = c.createRadialGradient(500, 700, 100, 500, 700, 900); g.addColorStop(0, '#12304a'); g.addColorStop(1, '#050c16'); c.fillStyle = g; c.fillRect(0, 0, 1000, 1400);
+  const W = host.clientWidth, H = host.clientHeight;
+  const load = i => new Promise(res => { const m = new Image(); m.crossOrigin = 'anonymous'; m.onload = () => res(m); m.onerror = () => { const n = new Image(); n.onload = () => res(n); n.onerror = () => res(null); n.src = i.getAttribute('src').replace(/^https?:\/\/[^@]+@main\//, ''); }; m.src = i.currentSrc || i.src; });
+  Promise.all(imgs.map(load)).then(ms => {
+    imgs.map((i, k) => ({ i, m: ms[k], z: +i.style.zIndex || 0 })).sort((a, b) => a.z - b.z).forEach(o => {
+      if (!o.m) return; const r = o.i.getBoundingClientRect(), hr = host.getBoundingClientRect(), s = 1000 / hr.width;
+      c.drawImage(o.m, (r.left - hr.left) * s, (r.top - hr.top) * s, r.width * s, r.height * s);
+    });
+    c.fillStyle = 'rgba(95,243,255,.7)'; c.font = '20px sans-serif'; c.fillText('ORION · 机甲组装', 24, 1376);
+    cv.toBlob(b => { if (!b) return; const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '我的机甲.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); sfx(800); }, 'image/png');
+  });
+}function randomize(){
   eq = {};
   for (const slot of SLOT_ORDER){
     if ((slot === 'wings' || slot === 'halo' || slot === 'weapon') && Math.random() < .35) continue;
@@ -339,6 +354,7 @@ async function init(){
     const g = e.target.closest('.hz'); const k = e.dataTransfer.getData('text/plain'); if (g && k) equip(g.dataset.slot, k); });
   $('#bClear').addEventListener('click', () => { eq = {}; document.querySelectorAll('#bFig img.bp').forEach(i => i.remove()); refresh(); sfx(260); });
   $('#bRand').addEventListener('click', randomize);
+  $('#bSave').addEventListener('click', savePng);
   $('#bUnequip').addEventListener('click', () => unequip(sel));
   // 清理无效存档
   for (const s of Object.keys(eq)) if (!SLOTS[s] || !PARTS[eq[s]] || !slotFits(s, PARTS[eq[s]])) delete eq[s];
@@ -350,6 +366,8 @@ async function open(){
 }
 window.OrionBuild = { _set: o => { eq = o; refresh(); }, open, _calc: calc, _eq: () => eq, _preset: preset };
 })();
+
+
 
 
 
