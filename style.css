@@ -153,12 +153,6 @@ body.stage-panel .panel{opacity:1;pointer-events:auto}
 /* ================= 跃迁 / 出击 ================= */
 #warp{position:fixed;inset:0;width:100%;height:100%;z-index:40;pointer-events:none;opacity:0;transition:opacity .8s}
 body.stage-warp #warp{opacity:1}
-.sortie{position:fixed;inset:0;z-index:45;display:grid;place-content:center;justify-items:center;text-align:center;opacity:0;pointer-events:none;transition:opacity 1.2s}
-body.stage-sortie .sortie{opacity:1;pointer-events:auto}
-.s-eyebrow{font:12px var(--mono);letter-spacing:.5em;color:var(--cyan)}
-.sortie h2{margin:16px 0;font:600 clamp(54px,12vw,160px)/1 var(--serif);letter-spacing:.2em;color:#fff;text-shadow:0 0 40px rgba(95,230,255,.7)}
-.s-cn{font:300 18px/2 var(--cn);letter-spacing:.3em}
-.s-cn small{opacity:.55;font-size:13px}
 
 .flash{animation:flash .5s}
 @keyframes flash{0%{filter:brightness(3)}100%{filter:none}}
@@ -222,9 +216,6 @@ body.stage-hub .hub-zoom{transform:none;filter:none}
 /* 灯带脉动 + 装甲扫光 */
 .hl-armorglow{-webkit-mask:url(assets/mask-glow.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-glow.png) 0 0/100% 100% no-repeat;mix-blend-mode:screen;filter:brightness(2.4) saturate(1.7);animation:glowpulse 3.4s ease-in-out infinite alternate}
 @keyframes glowpulse{from{opacity:.05}to{opacity:.8}}
-.hl-sweep{-webkit-mask:url(assets/mask-armor.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-armor.png) 0 0/100% 100% no-repeat;mix-blend-mode:screen;
-  background:linear-gradient(104deg,transparent 42%,rgba(150,235,255,.34) 50%,transparent 58%) 0 0/260% 100%;background-position:130% 0;animation:sweep 7s 1.5s linear infinite}
-@keyframes sweep{0%{background-position:130% 0}55%,100%{background-position:-40% 0}}
 
 /* 头部:微点头 + 眼睛 */
 .hl-head{inset:auto;left:35.3%;top:0;width:20.3%;height:42.5%;transform-origin:50% 100%;animation:headmove 9s ease-in-out infinite alternate;
@@ -244,9 +235,6 @@ body.stage-hub .hub-zoom{transform:none;filter:none}
 @keyframes lid{0%{scale:1 0}45%{scale:1 1.15}100%{scale:1 0}}
 
 /* 手(盖在球前面) */
-.hl-frontgrp{pointer-events:none}
-.hand-box{position:absolute;left:72.368%;top:28.162%;width:22.368%;height:28.055%}
-.hand-box img{width:100%;height:100%}
 
 /* 轨道环 & 星球 */
 .hl-rings{width:100%;height:100%;overflow:visible;pointer-events:none;mix-blend-mode:screen}
@@ -274,29 +262,12 @@ body.stage-hub .hub-zoom{transform:none;filter:none}
 .orb:hover .orb-glass{border-color:#fff;box-shadow:inset 0 0 50px rgba(160,220,255,.8),0 0 60px rgba(140,220,255,.9)}
 
 #hubfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
-.hub-caption{position:absolute;left:4vw;bottom:6.5vh;z-index:6;width:min(80vw,340px);padding:18px 20px 16px;border-left:2px solid var(--cyan);background:linear-gradient(90deg,rgba(4,12,22,.78),rgba(4,12,22,0));transition:opacity .35s,transform .35s}
-.hub-caption.swap{opacity:0;transform:translateY(8px)}
-.cap-no{font:11px var(--mono);letter-spacing:.4em;color:var(--cyan)}
-.cap-cn{margin-top:8px;font:500 clamp(24px,3vw,36px) var(--cn);letter-spacing:.3em;color:#fff;text-shadow:0 0 18px rgba(95,230,255,.5)}
-.cap-en{margin-top:4px;font:12px var(--mono);letter-spacing:.4em;color:rgba(160,235,255,.8)}
-.cap-desc{margin-top:12px;font:300 13px/1.8 var(--cn);letter-spacing:.08em;color:var(--beige);opacity:.85}
-.cap-btn{margin-top:14px;font:12px var(--mono);letter-spacing:.3em;padding:8px 16px;border:1px solid rgba(95,230,255,.6);color:var(--cyan);transition:.2s}
-.cap-btn:hover{background:rgba(95,230,255,.15);box-shadow:0 0 14px rgba(95,230,255,.4)}
 .hub-hint{position:absolute;left:50%;bottom:2.8vh;transform:translateX(-50%);z-index:6;font:11px var(--mono);letter-spacing:.3em;opacity:.5;white-space:nowrap}
 
-.info-en{font:12px var(--mono);letter-spacing:.4em;color:var(--cyan);margin:-12px 0 18px}
-.info-desc{font:300 15px/2 var(--cn);letter-spacing:.06em;color:var(--beige)}
-.info-soon{margin-top:20px;font:12px var(--mono);letter-spacing:.25em;color:rgba(255,58,94,.9)}
 
-@media (max-width:720px){
-  .hub-caption{left:50%;transform:translateX(-50%);bottom:5vh;width:90vw;text-align:center;border-left:0;border-top:2px solid var(--cyan);background:linear-gradient(180deg,rgba(4,12,22,.7),transparent)}
-  .hub-caption.swap{transform:translate(-50%,8px)}
-  .hub-hint{display:none}
-}
 .hub-backdrop{position:absolute;inset:-6%;background:url(assets/hub-bg.jpg) center/cover;filter:blur(24px) brightness(.55) saturate(1.2)}
 .hl-rings.spin{filter:brightness(1.9) drop-shadow(0 0 8px rgba(120,220,255,.8));transition:filter .4s}
 .hl-rings{transition:filter .8s}
-body.stage-info #info{opacity:1;pointer-events:auto}
 /* 主菜单:减弱全局暗角/调色,让机甲亮起来 */
 body.stage-hub .grade{opacity:.18;transition:opacity 1.2s}
 body.stage-hub .vignette{box-shadow:inset 0 0 9vmin rgba(0,0,0,.55)}

@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>STAR ARMOR : ORION · 星际机甲</title>
-<meta name="description" content="STAR ARMOR : ORION —— 星际机甲风格的交互式开端页面:系统自检、欢迎登录语音、会呼吸会眨眼的机甲、绕机甲公转的功能星球。">
+<meta name="description" content="STAR ARMOR : ORION —— 星际机甲风格的交互式开端页面:系统自检、欢迎登录语音、跃迁穿梭、会呼吸会眨眼的机甲、绕机甲公转的功能星球、世界观。">
 <meta name="theme-color" content="#0a0e12">
 <meta property="og:title" content="STAR ARMOR : ORION · 星际机甲">
-<meta property="og:description" content="系统自检 → 欢迎登录 → 机甲星域主菜单">
+<meta property="og:description" content="系统自检 → 欢迎登录 → 跃迁 → 机甲星域主菜单 → 世界观">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="fx.css">
+<link rel="stylesheet" href="world.css">
 </head>
 <body class="stage-boot">
 
@@ -42,13 +44,12 @@
   <div class="hub-zoom" id="hubzoom">
     <div class="hub-canvas" id="hubcanvas">
 
-      <!-- 后景组:背景 + 机甲(整体轻摇 / 呼吸 / 灯带脉动 / 扫光 / 头部微动 / 眨眼) -->
-      <div class="hl px" id="stageBack">
+      <!-- 后景组:背景 + 机甲(整体轻摇 / 呼吸 / 灯带脉动 / 头部微动 / 眨眼) -->
+      <div class="hl" id="stageBack">
         <div class="hl hl-bg"></div>
         <div class="hl hl-sway"><div class="hl hl-breath">
           <div class="hl hl-mech"></div>
           <div class="hl hl-armorglow"></div>
-          <div class="hl hl-sweep"></div>
           <div class="hl hl-head" id="mechhead">
             <div class="hl hl-headimg"></div>
             <i class="eyeglow eg-l"></i><i class="eyeglow eg-r"></i>
@@ -57,28 +58,36 @@
         </div></div>
       </div>
 
-      <!-- 轨道 & 星球 -->
-      <svg class="hl hl-rings px2" id="rings" viewBox="0 0 1672 941" preserveAspectRatio="none"></svg>
-      <div class="hl hl-orbs px2" id="orbs"></div>
+      <!-- 远景星点(与背景错位移动,制造景深) -->
+      <canvas class="hl" id="hubfar"></canvas>
+      <!-- 星云雾带 + 光束 -->
+      <div class="hl hl-mist" id="mist"><i class="m1"></i><i class="m2"></i><i class="m3"></i></div>
+      <div class="hl hl-rays" id="rays"><i></i><i></i><i></i></div>
 
-      <!-- 前景组:手指盖在球前面,像握着球(与后景同步摆动) -->
-      <div class="hl px hl-frontgrp" id="stageFront">
+      <!-- 轨道 & 星带 & 星球 -->
+      <svg class="hl hl-rings" id="rings" viewBox="0 0 1672 941" preserveAspectRatio="none"></svg>
+      <canvas class="hl" id="beltback"></canvas>
+      <div class="hl hl-orbs" id="orbs"></div>
+      <canvas class="hl" id="beltfront"></canvas>
+
+      <!-- 前景组:手(四根手指可独立弯曲) -->
+      <div class="hl" id="stageFront">
         <div class="hl hl-sway"><div class="hl hl-breath">
-          <div class="hand-box"><img src="assets/hand.webp" alt=""></div>
+          <div class="hand-box" id="handbox"></div>
         </div></div>
       </div>
     </div>
   </div>
   <canvas id="hubfx"></canvas>
 
-  <div class="hub-caption" id="cap">
-    <p class="cap-no" id="capno">01 / 05</p>
-    <h3 class="cap-cn" id="capcn">创造角色</h3>
-    <p class="cap-en" id="capen">CREATE PILOT</p>
-    <p class="cap-desc" id="capdesc"></p>
-    <button class="cap-btn" id="capgo">进入 ▸</button>
+  <div class="hub-hud" id="hubhud" aria-hidden="true">
+    <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+    <div class="hud-l"><span>ORION HUB // NODE 07</span><b>SYNC 98.7%</b><em id="hudO">ORBIT 01 / 05</em></div>
+    <div class="hud-r"><span id="hudX">X +0.000</span><span id="hudY">Y +0.000</span><span id="hudZ">DEPTH 0.00 AU</span></div>
+    <div class="hud-ticks l"></div><div class="hud-ticks r"></div>
   </div>
-  <p class="hub-hint">点击星球 · 轨道顺时针公转 &nbsp;/&nbsp; → Enter</p>
+  <div class="hub-flash" id="hubflash"></div>
+  <p class="hub-hint">点击星球进入 &nbsp;/&nbsp; ← → 转动轨道</p>
 </section>
 
 <div class="grade"></div>
@@ -138,6 +147,10 @@
   <div class="w-bar"><i></i></div>
 </section>
 
+<!-- 跃迁穿梭 / 进入光球的白场 -->
+<canvas id="warp"></canvas>
+<div class="iris" id="iris"></div>
+
 <!-- License 面板 -->
 <aside class="panel" id="panel">
   <div class="panel-inner">
@@ -147,23 +160,270 @@
       <li><b>Key visual</b><span>Cold-cyan mecha portrait · mecha hub scene</span></li>
       <li><b>Space assets</b><span>AI-generated planet / warship / orbital ring / emblem</span></li>
       <li><b>Voice</b><span>"Welcome, Master." login voice line</span></li>
-      <li><b>Interface</b><span>Boot-log → glitch → title → orbiting hub, inspired by NieR:Automata UI</span></li>
+      <li><b>Worldview text</b><span>Adapted from the world card 《万机拆装纪元》</span></li>
+      <li><b>Interface</b><span>Boot-log → glitch → title → warp → orbiting hub, inspired by NieR:Automata UI</span></li>
       <li><b>Engine</b><span>HTML · CSS · Canvas · Web Audio — no frameworks</span></li>
     </ul>
     <button class="back" id="panelback">◂ BACK</button>
   </div>
 </aside>
 
-<!-- 星球详情 -->
-<aside class="panel" id="info">
-  <div class="panel-inner">
-    <h3 id="infot"></h3>
-    <p class="info-en" id="infoen"></p>
-    <p class="info-desc" id="infod"></p>
-    <p class="info-soon">// 本章节建设中 · COMING SOON</p>
-    <button class="back" id="infoback">◂ BACK</button>
+<!-- ============ 世界观 ============ -->
+<section class="world" id="world" aria-label="世界观">
+  <canvas id="wstars"></canvas>
+  <div class="w-progress"><i id="wprog"></i></div>
+  <button class="w-back" id="wback">◂ RETURN TO ORBIT</button>
+  <nav class="w-nav" id="wnav" aria-label="章节"></nav>
+
+  <div class="w-scroll" id="wscroll">
+
+    <!-- HERO -->
+    <header class="wh" id="ch-0" data-title="序">
+      <div class="wh-bg" data-p="0.35"><img src="assets/hub-bg.jpg" alt=""></div>
+      <div class="wh-grad"></div>
+      <div class="wh-ring" data-p="-0.15"><img src="assets/ring.webp" alt=""></div>
+      <div class="wh-text">
+        <p class="eyebrow">WORLDVIEW · 新星历 412 年</p>
+        <h1 class="wh-title">万机拆装纪元</h1>
+        <h2 class="wh-en">THE AGE OF UNIVERSAL PORTS</h2>
+        <p class="wh-lead">“大崩落”之后四百余年,一切机械造物被一套协议重新定义。<br>只要你的手够稳、眼够毒、弄得到好配件,就能亲手把一堆废铁,拼成足以逆伐高阶王牌的钢铁奇迹。</p>
+        <ul class="wh-stats">
+          <li><b data-n="5">0</b><span>大战略区域</span></li>
+          <li><b data-n="12">0</b><span>大势力</span></li>
+          <li><b data-n="72">0</b><span>款机甲与高达</span></li>
+          <li><b data-n="9">0</b><span>阶战力体系</span></li>
+          <li><b data-n="50">0</b><span>处可游玩地点</span></li>
+        </ul>
+        <p class="wh-scroll">SCROLL ▾</p>
+      </div>
+    </header>
+
+    <!-- CH.01 -->
+    <section class="ch ch-split" id="ch-1" data-title="碎星战争">
+      <div class="ch-media rv">
+        <div class="frame"><div class="frame-in"><img data-p="0.08" class="dim" src="assets/w-fleet.jpg" alt=""></div><i class="fc a"></i><i class="fc b"></i><i class="fc c"></i><i class="fc d"></i></div>
+        <p class="cap">FIG.01 — 旧联邦舰队与星骸议会的三十七年战争</p>
+      </div>
+      <div class="ch-body rv">
+        <p class="ch-no">CHAPTER 01 <em>新星历前 37 年</em></p>
+        <h3>旧联邦与碎星战争</h3>
+        <p>大崩落前夜,人类已铺设近地轨道电梯、拉格朗日点殖民卫星群与月面自动化重工业基地。机甲制造被“中央超级智脑工厂”垄断——每一台出厂的机动战士都使用封闭的专有加密接口,连拧开一颗备用电池仓的螺丝,都需要向原厂申请量子授权密钥。</p>
+        <p>直到一支在奥尔特云边缘开采氦-3 的深空勘探舰队,意外唤醒了沉睡在地外天体中的机械聚合文明——<b>星骸议会(The Astral Remnant)</b>。它们是以吞噬恒星重元素、重构机械规则为本能的硅基量子集群。长达三十七年的“碎星战争”由此爆发。</p>
+        <blockquote>一艘战舰的激光炮损毁了,旁边就停着另一家工厂生产的完好炮管——却因接口协议不兼容,只能眼睁睁看着战舰被星骸母舰撕碎。</blockquote>
+      </div>
+    </section>
+
+    <!-- CH.02 -->
+    <section class="ch ch-split rev" id="ch-2" data-title="大崩落">
+      <div class="ch-media rv">
+        <div class="frame"><div class="frame-in"><img data-p="0.1" src="assets/w-planet.jpg" alt=""><i class="flashring"></i></div><i class="fc a"></i><i class="fc b"></i><i class="fc c"></i><i class="fc d"></i></div>
+        <p class="cap">FIG.02 — 同步轨道上的量子闪光与七个月的星尘雨</p>
+      </div>
+      <div class="ch-body rv">
+        <p class="ch-no">CHAPTER 02 <em>新星历 0 年</em></p>
+        <h3>大崩落之日</h3>
+        <p>战争的最后一天,联邦最高统帅部与“零号先驱”夏亚启动孤注一掷的<b>“破晓协议”</b>,在同步轨道引爆了人类与星骸议会技术结合的终极造物——阿赖耶识量子矩阵。量子闪光湮灭了星骸议会的主力远征舰队,也撕裂了三座巨型殖民卫星与全球自动化中枢网络。</p>
+        <p>随后是持续七个月的<b>“星尘雨”</b>。落下的是被矩阵改写过的纳米级通用重构因子(U-Factor)。幸存者爬出地下掩体后惊讶地发现:一切暴露在星尘雨下的钛合金、月神钛、超导晶体与聚变炉芯,其底层物理连接,都被统一重塑成了通用卡扣与量子总线——这就是拯救人类文明火种的<b>万机协议(U-Port 6.0)</b>。</p>
+      </div>
+    </section>
+
+    <!-- CH.03 时间线 -->
+    <section class="ch ch-timeline" id="ch-3" data-title="四百年">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 03</p>
+        <h3>四百年演变:从废土拾荒到全民拆装</h3>
+      </div>
+      <ol class="tl">
+        <li class="rv"><time>NE 1 – 120</time><h4>锈铁与拾荒的黎明期</h4><p>幸存者依托新巴比伦盆地、海上船坞赫菲斯托斯等旧兵工厂遗址,用星骸残片与旧高达零件拼出最简陋的一、二阶机甲,对抗辐射兽与自律机械残骸。</p></li>
+        <li class="rv"><time>NE 125</time><h4>第一届万机标准化大会</h4><p>在太平洋海上移动岛屿召开,确立“六大通用模块”的物理公差与能量总线标准,并划定一至九阶战力评估准则。</p></li>
+        <li class="rv"><time>NE 210 – 350</time><h4>双核革命</h4><p>大裂谷深层晶林被发掘,阿瓦隆轨道要塞重新点火。贴身机甲的“任意拟态变形”与高达的“嵌套式驾驶舱联动”迎来爆发。</p></li>
+        <li class="rv"><time>NE 398</time><h4>新巴比伦高架截击战</h4><p>一名三阶民间构装师以蓝白混搭零件,凭 97.6% 的接口耦合率与精确的热胀冷缩计算,逆伐全紫精装的四阶特装机——手艺压过了配件。</p></li>
+        <li class="rv now"><time>NE 412</time><h4>此刻</h4><p>无论你是盘踞九天之上的轨道军阀,还是龟缩在锈水沟里的穷酸拾荒少年——只要手够稳、眼够毒、弄得到好配件,就能亲手拼出钢铁奇迹。</p></li>
+      </ol>
+    </section>
+
+    <!-- CH.04 万机协议 -->
+    <section class="ch ch-protocol" id="ch-4" data-title="万机协议">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 04</p>
+        <h3>万机协议 U-Port 6.0</h3>
+        <p class="ch-sub">它让 1.8 米高的贴身战甲与 30 米高的战略高达共用同一套拆装逻辑:所有机械造物,被抽象为六大标准模块。</p>
+      </div>
+      <div class="mods">
+        <article class="mod rv"><i>M-01</i><h4>动力炉心</h4><span>Power Core</span></article>
+        <article class="mod rv"><i>M-02</i><h4>承重骨架与关节</h4><span>Frame &amp; Joints</span></article>
+        <article class="mod rv"><i>M-03</i><h4>外甲与拟态壳体</h4><span>Armor &amp; Morph-Shell</span></article>
+        <article class="mod rv"><i>M-04</i><h4>神经传感与火控中枢</h4><span>FCS &amp; Neural Link</span></article>
+        <article class="mod rv"><i>M-05</i><h4>推进与机动总成</h4><span>Drive &amp; Thrusters</span></article>
+        <article class="mod rv"><i>M-06</i><h4>武装与战术挂载</h4><span>Armaments &amp; Hardpoints</span></article>
+      </div>
+      <div class="lock rv">
+        <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="l1" cx="100" cy="100" r="90"/><circle class="l2" cx="100" cy="100" r="62"/><circle class="l3" cx="100" cy="100" r="34"/><path d="M100 10V190M10 100H190M36 36L164 164M164 36L36 164"/></svg>
+        <div>
+          <h4>三环六向磁锁卡扣</h4>
+          <p><b>外环</b>承受剪切力与结构应力;<b>中环</b>是液态超导金属密封的能量高压总线;<b>内环</b>是微米级光纤量子数据通道。只要模块规格处于同一量级,一名技师就能在几分钟内,把一家军工财团的炉心,装进另一家敌对财团的高达胸腔里。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH.05 双核 -->
+    <section class="ch ch-dual" id="ch-5" data-title="双核机甲">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 05</p>
+        <h3>双核:贴身机甲 × 高达</h3>
+        <p class="ch-sub">两者不是割裂的两套系统,而是咬合在一起的“内外双核共鸣体”。</p>
+      </div>
+      <div class="duo">
+        <article class="mech rv">
+          <div class="mech-img"><img data-p="0.06" src="assets/w-head.jpg" alt=""><span>MSF</span></div>
+          <h4>小型贴身机甲 <em>Micro-Skin Frame</em></h4>
+          <dl><dt>全高</dt><dd>1.8 – 2.6 m</dd><dt>重量</dt><dd>15 – 40 kg</dd><dt>重构</dt><dd>0.4 – 1.5 s</dd></dl>
+          <p>数万枚微米级多向纳米磁锁关节与液态记忆超导肌束编织成拓扑网络。平时 2 秒坍缩成一枚胸口的金属徽章、一条腰带扣、一对护腕,甚至一件机能风衣;战斗时瞬间重组为战甲、脉冲摩托、滑翔翼、蜘蛛、炮台……</p>
+        </article>
+        <article class="mech rv">
+          <div class="mech-img"><img data-p="0.06" src="assets/w-torso.jpg" alt=""><span>GOG</span></div>
+          <h4>大型高达 <em>Giant Orbital Gundam</em></h4>
+          <dl><dt>全高</dt><dd>18 – 24 m(极限 35 m)</dd><dt>重量</dt><dd>38 – 140 t</dd><dt>干扰</dt><dd>数十公里粒子网</dd></dl>
+          <p>高出力反应炉释放的星髓粒子,会在战场织出半径数公里至数十公里的立体晶格干扰网,令超视距通讯、卫星制导与雷达统统失明。盲战之中,唯有能目视索敌、近距离挥舞光束军刀的人形高达,才能主宰陆海空与宇宙战场。</p>
+        </article>
+      </div>
+      <div class="nest rv">
+        <h4>全周天嵌套式驾驶舱联动 <em>Nest-Cockpit Link</em></h4>
+        <div class="nest-grid">
+          <div><b>01</b><p>机师穿着贴身战甲步入高达胸腔,脊柱上的量子接驳口“咔哒”一声与母座咬死。神经信号先被放大、降噪,再灌入高达的骨架总线——耦合率 95% 以上,最高为高达额外增加 <i>+35%</i> 的反应与并发带宽。</p></div>
+          <div><b>02</b><p>20G 以上的超高过载下,战甲的液态缓冲层替机师吸收 <i>70%</i> 以上的冲击。</p></div>
+          <div><b>03</b><p>高达四肢尽断、炉心将要殉爆时,战甲会触发极限变形破舱而出——并在敌人以为胜券在握时,以两米身躯发动“贴脸斩首”。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH.06 九阶 -->
+    <section class="ch ch-tiers" id="ch-6" data-title="九阶">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 06</p>
+        <h3>一至九阶战力体系</h3>
+        <p class="ch-sub">由赫菲斯托斯学院岛与星穹防卫军联合颁布的评定标准。壁垒森严,但“自由拆装”赋予顶级手艺人以下克上的可能。</p>
+      </div>
+      <ol class="tiers">
+        <li class="rv" style="--w:11%"><i>I</i><h4>铁皮 · 启蒙</h4><p>MSF 5–15 kW · 摩托 95–145 km/h</p><u></u></li>
+        <li class="rv" style="--w:22%"><i>II</i><h4>制式 · 改装</h4><p>MSF 15–40 kW · 摩托 210–250 km/h</p><u></u></li>
+        <li class="rv" style="--w:33%"><i>III</i><h4>精锐 · 老兵</h4><p>能量盾与 3 种以上变形 · 高达短时低空飞行</p><u></u></li>
+        <li class="rv" style="--w:44%"><i>IV</i><h4>特装 · 王牌</h4><p>摩托 460–540 km/h · 高达粒子炮与有线飞拳</p><u></u></li>
+        <li class="rv" style="--w:55%"><i>V</i><h4>统领 · 大师</h4><p>初级精神感应框架 · 同时操控 4–8 枚浮游炮</p><u></u></li>
+        <li class="rv" style="--w:66%"><i>VI</i><h4>战略 · 宗师</h4><p>微型聚变炉 · 突破音障 · 单机突入大气层</p><u></u></li>
+        <li class="rv" style="--w:77%"><i>VII</i><h4>天灾 · 破军</h4><p>高达 0.5–2.0 GW · 广域地图炮 · 抗衡驱逐舰编队</p><u></u></li>
+        <li class="rv" style="--w:88%"><i>VIII</i><h4>半神 · 星域</h4><p>百米级能量光翼 · 24 枚浮游炮 · 一击蒸发小型要塞</p><u></u></li>
+        <li class="rv hot" style="--w:100%"><i>IX</i><h4>神话 · 规则</h4><p>局部空间折叠 · 时间流速干涉 · 万机沉默领域</p><u></u></li>
+      </ol>
+    </section>
+
+    <!-- CH.07 品质 -->
+    <section class="ch ch-quality" id="ch-7" data-title="品质与货币">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 07</p>
+        <h3>配件品质六大梯度</h3>
+        <p class="ch-sub">决定机甲战力的不是堆砌金色零件,而是<b>基础出力 × 工艺</b>——接口公差、走线拓扑、手工研磨,以及对武器禁忌的敬畏。</p>
+      </div>
+      <div class="qual">
+        <article class="rv q1"><i></i><h4>灰 · 残次</h4><b>×0.70–0.85</b><p>锈蚀、金属疲劳的废铁拆解件,耦合率上限被锁在 75% 以下,随时炸膛。</p></article>
+        <article class="rv q2"><i></i><h4>白 · 制式</h4><b>×1.00</b><p>流水线标准量产件。平庸,但极度稳定。</p></article>
+        <article class="rv q3"><i></i><h4>蓝 · 精良</h4><b>×1.30</b><p>真空锻造与特种陶瓷复合的军规件,四阶主力机的标配。</p></article>
+        <article class="rv q4"><i></i><h4>紫 · 特装</h4><b>×1.75</b><p>大师手工精修或掺入星髓矿的定制件,附带偏心磁浮、光学折射等词条。</p></article>
+        <article class="rv q5"><i></i><h4>金 · 传说</h4><b>×2.40</b><p>旧联邦尖端试验品,或八阶宗师数年心血的孤品,自带独立编号与威名。</p></article>
+        <article class="rv q6"><i></i><h4>红 · 神话</h4><b>×3.50+</b><p>从星骸母舰奇点或九阶神机上剥离的规则级造物。</p></article>
+      </div>
+      <div class="money rv">
+        <div><b>CR</b><span>信用点</span><p>地面都市、学院岛与军工财团通用</p></div>
+        <div><b>◈</b><span>高能星髓晶核</span><p>轨道圈与高阶交易的硬通货</p></div>
+        <div><b>✦</b><span>阵营功勋</span><p>声望与站队换来的特权</p></div>
+      </div>
+    </section>
+
+    <!-- CH.08 区域 -->
+    <section class="ch ch-regions" id="ch-8" data-title="五大区域">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 08</p>
+        <h3>五大战略区域</h3>
+        <p class="ch-sub">每个区域细分为 10 个可游玩的小地点,共 50 处。</p>
+      </div>
+      <div class="regions">
+        <article class="reg rv"><div class="reg-img"><img data-p="0.08" src="assets/w-station.jpg" alt=""></div><div class="reg-t"><i>01</i><h4>新巴比伦·第九拆装区</h4><em>铁锈与霓虹之城</em><p>地面盆地立体钢铁都市,垂直落差 1,600 米。高阶拍卖、千匠手工研磨、午夜飙车与地下盲盒死斗,汇成核心枢纽。</p></div></article>
+        <article class="reg rv"><div class="reg-img"><img data-p="0.08" src="assets/w-arch.jpg" alt=""></div><div class="reg-t"><i>02</i><h4>天穹之锚·阿瓦隆轨道要塞</h4><em>L1 拉格朗日点星港</em><p>悬浮于地月 L1 点的双环旋转太空圣殿,人类最高规格的大型高达母港与精神感应科研核心。</p></div></article>
+        <article class="reg rv"><div class="reg-img"><img data-p="0.08" src="assets/w-debris.jpg" alt=""></div><div class="reg-t"><i>03</i><h4>大裂谷·星骸坟场</h4><em>第零禁区</em><p>长达 420 公里的末日机械峡谷,埋藏着“观测者七号”母舰残骸,以及无数六至九阶的遗迹配件。</p></div></article>
+        <article class="reg rv"><div class="reg-img"><img data-p="0.08" class="tint-g" src="assets/w-fleet.jpg" alt=""></div><div class="reg-t"><i>04</i><h4>赫菲斯托斯学院岛</h4><em>海上构装圣殿</em><p>巡航于太平洋的 22 公里移动人工岛,U-Port 6.0 标准的制定者,最高构装学府。</p></div></article>
+        <article class="reg rv"><div class="reg-img"><img data-p="0.08" class="tint-r" src="assets/bg-mecha.jpg" alt=""></div><div class="reg-t"><i>05</i><h4>赤砂走廊·极速荒原</h4><em>自由联邦流放地</em><p>绵延 3,200 公里的赤红铁砂荒漠,废土高速飙车、重装护镖与沙暴盲战的狂野乐园。</p></div></article>
+      </div>
+    </section>
+
+    <!-- CH.09 势力 -->
+    <section class="ch ch-factions" id="ch-9" data-title="十二势力">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 09</p>
+        <h3>十二大势力</h3>
+        <p class="ch-sub">具名 NPC 与势力皆有独立的算计、机械审美偏见与底线——绝不会无条件倒贴赠送神装。</p>
+      </div>
+      <div class="facs">
+        <article class="fac rv"><i>VIII</i><h4>星穹联合防卫军 <em>U.S.D.F</em></h4><p>阿瓦隆轨道要塞 · 奥黛丽总司令</p></article>
+        <article class="fac rv"><i>VIII</i><h4>赫菲斯托斯学院岛</h4><p>太平洋移动人工岛 · 莱茵哈特大长老</p></article>
+        <article class="fac rv"><i>VII</i><h4>红砧拆装师公会</h4><p>千匠长街 · 格雷戈里总执事</p></article>
+        <article class="fac rv"><i>VII</i><h4>泰坦重工集团</h4><p>万机交易塔 · 维克多·施特劳斯</p></article>
+        <article class="fac rv"><i>VI</i><h4>新月航空财团</h4><p>万机交易塔与轨道船坞 · 艾琳娜·罗兰</p></article>
+        <article class="fac rv"><i>V</i><h4>夜隼暴走团</h4><p>午夜环道 · 薇拉·夜枭</p></article>
+        <article class="fac rv"><i>VI</i><h4>赤蝎军团</h4><p>赤砂走廊北翼 · 雷克斯·沙蝎</p></article>
+        <article class="fac rv"><i>VI</i><h4>铁轮王庭</h4><p>赤砂走廊东翼 · 铁轮大公</p></article>
+        <article class="fac rv"><i>VI</i><h4>星骸拾荒者公会</h4><p>大裂谷望骸崖 · 秃鹫镇六机中立委员会</p></article>
+        <article class="fac rv hot"><i>VII</i><h4>真理教团</h4><p>大裂谷地下圣堂(深 2,850 m) · 审判长·加百列</p></article>
+        <article class="fac rv hot"><i>VII</i><h4>零点钟表匠</h4><p>无固定驻地 · “十二点整”·零</p></article>
+        <article class="fac rv"><i>IV–VII</i><h4>自由游侠与治安局联盟</h4><p>风眼加油站 · 独臂老陈 / 雷诺科长</p></article>
+      </div>
+    </section>
+
+    <!-- CH.10 社会与公约 -->
+    <section class="ch ch-society" id="ch-10" data-title="秩序">
+      <div class="ch-head rv">
+        <p class="ch-no">CHAPTER 10</p>
+        <h3>人、机、技 与《新星历武装公约》</h3>
+      </div>
+      <div class="soc">
+        <div class="rv"><h4>机师 <em>Pilots</em></h4><p>专精贴身机甲与巷战的是<b>铁骑 Rider</b>;专精高达的是<b>高达使 Meister</b>;两者兼修并熟练掌握嵌套联动者,被尊为<b>双核统御者 Dual-Core Master</b>。</p></div>
+        <div class="rv"><h4>构装师 <em>Assemblers</em></h4><p>负责拆解、研磨、走线拓扑与神经调校的技术权威。顶级构装宗师拥有凌驾于普通军队指挥官之上的超然地位。</p></div>
+        <div class="rv"><h4>拾荒猎人 <em>Scavengers</em></h4><p>游荡在废墟与星骸禁区里,靠拆解战舰与自律机发财。是整个配件供应链最底层,也最血腥的毛细血管。</p></div>
+      </div>
+      <div class="treaty rv">
+        <h4>《新星历武装公约》</h4>
+        <p><b>都市限高与拟态令</b> —— 人口过百万的合法都市内,严禁未经批准展开三阶以上大型高达;贴身机甲在商业区必须折叠收纳,或维持合法限速的摩托形态。</p>
+        <p><b>盲盒拆装竞技合法化</b> —— 允许设立受控的地下“铁砧死斗场”与午夜竞速环道:有限预算,随机散件,公平对决,选拔野生天才。</p>
+      </div>
+    </section>
+
+    <!-- 结尾 -->
+    <footer class="wend" id="ch-11" data-title="起点">
+      <div class="wend-in rv">
+        <p class="eyebrow">CHOOSE YOUR ORIGIN</p>
+        <h3>选择你的起点</h3>
+        <div class="origins">
+          <article><i>01</i><h4>底层鬼手学徒</h4><p>起步于第九区锈水沟,一阶魔改贴身甲,擅长极限手搓拆装与以弱胜强。</p></article>
+          <article><i>02</i><h4>学院岛落魄旁系</h4><p>起步于赫菲斯托斯学院岛,二阶“白鹭 I 型”与“白骑士”高达使用权,擅长精密拓扑。</p></article>
+          <article><i>03</i><h4>荒野孤狼骑手</h4><p>起步于赤砂走廊风眼加油站,二阶“野马”越野摩托甲,擅长极速飙车与荒野劫镖。</p></article>
+        </div>
+        <p class="src">世界观取自世界卡《万机拆装纪元:贴身机甲 × 高达》</p>
+        <button class="w-back2" id="wback2">◂ RETURN TO ORBIT</button>
+      </div>
+    </footer>
   </div>
-</aside>
+</section>
+
+<!-- 其它球的占位页 -->
+<section class="coming" id="coming">
+  <canvas id="cstars"></canvas>
+  <div class="coming-in">
+    <p class="eyebrow" id="cmEn">CREATE PILOT</p>
+    <h2 id="cmCn">创造角色</h2>
+    <p class="cm-desc" id="cmDesc"></p>
+    <p class="cm-soon">// 本章节建设中 · COMING SOON</p>
+    <button class="w-back2" id="cmBack">◂ RETURN TO ORBIT</button>
+  </div>
+</section>
 
 <audio id="welcomeAudio" src="assets/welcome-master.mp3" preload="auto"></audio>
 <script src="main.js"></script>

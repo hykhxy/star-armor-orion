@@ -1,0 +1,121 @@
+/* =====================================================
+   fx.css —— 空间感 / 视差 / 星带 / HUD / 穿梭 / 握拳 / 光球 / 阶段切换
+   ===================================================== */
+
+/* ---------- 阶段显隐 ---------- */
+body.stage-warp .menu-wrap,
+body.stage-world .menu-wrap,
+body.stage-coming .menu-wrap{opacity:0;pointer-events:none;transition:opacity .5s}
+body.stage-warp .scene{opacity:0;transition:opacity .9s}
+body.stage-warp .welcome{opacity:0;transition:opacity .9s}
+body.stage-world .hub,body.stage-coming .hub{opacity:0;pointer-events:none;transition:opacity .01s}
+body.stage-world .scene,body.stage-coming .scene{opacity:0}
+.world,.coming{position:fixed;inset:0;z-index:25;opacity:0;pointer-events:none;background:#02050a;transition:opacity 1.2s ease}
+body.stage-world .world,body.stage-coming .coming{opacity:1;pointer-events:auto}
+body.stage-world .grade,body.stage-coming .grade{opacity:.1}
+body.stage-world .scan,body.stage-coming .scan{opacity:.12}
+body.stage-world #noise,body.stage-coming #noise{opacity:.04}
+
+/* ---------- 穿梭 / 过渡 ---------- */
+#warp{position:fixed;inset:0;width:100%;height:100%;z-index:40;pointer-events:none;opacity:0;transition:opacity .8s;background:#02060a}
+body.stage-warp #warp{opacity:1}
+body.warp-out #warp{opacity:0;transition:opacity 1.4s ease}
+
+.iris{position:fixed;left:50%;top:50%;width:26vmax;height:26vmax;margin:-13vmax 0 0 -13vmax;border-radius:50%;z-index:50;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,#fff 0,#e9fcff 30%,rgba(150,235,255,.85) 52%,rgba(70,160,255,.3) 68%,transparent 74%);will-change:transform,opacity}
+
+/* ---------- 空间感:深度层 ---------- */
+.hl{will-change:transform}
+#hubfar{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen}
+#beltback,#beltfront{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen}
+
+/* 星云雾带:三块大尺度渐变缓慢漂移 */
+.hl-mist{pointer-events:none;mix-blend-mode:screen;overflow:hidden}
+.hl-mist i{position:absolute;display:block;border-radius:50%;filter:blur(46px);opacity:.0;animation:mist 26s ease-in-out infinite alternate}
+.hl-mist .m1{left:-10%;top:4%;width:62%;height:44%;background:radial-gradient(ellipse,rgba(70,110,255,.42),rgba(120,70,220,.18) 55%,transparent 72%);animation-duration:30s;opacity:.55}
+.hl-mist .m2{right:-14%;top:-6%;width:70%;height:50%;background:radial-gradient(ellipse,rgba(150,80,230,.38),rgba(60,100,255,.16) 55%,transparent 72%);animation-duration:36s;animation-delay:-9s;opacity:.55}
+.hl-mist .m3{left:18%;bottom:-18%;width:70%;height:42%;background:radial-gradient(ellipse,rgba(40,190,255,.28),rgba(40,90,200,.1) 55%,transparent 72%);animation-duration:24s;animation-delay:-14s;opacity:.5}
+@keyframes mist{from{transform:translate3d(-3%,-2%,0) scale(1)}to{transform:translate3d(4%,3%,0) scale(1.14)}}
+
+/* 光束:从头部上方斜射 */
+.hl-rays{pointer-events:none;mix-blend-mode:screen;overflow:hidden}
+.hl-rays i{position:absolute;top:-20%;display:block;width:12%;height:150%;transform-origin:50% 0;
+  background:linear-gradient(180deg,rgba(170,235,255,.20),rgba(120,200,255,.05) 55%,transparent);filter:blur(10px);opacity:.0;animation:ray 11s ease-in-out infinite}
+.hl-rays i:nth-child(1){left:30%;transform:rotate(18deg)}
+.hl-rays i:nth-child(2){left:44%;width:7%;transform:rotate(8deg);animation-delay:-4s}
+.hl-rays i:nth-child(3){left:58%;width:14%;transform:rotate(-14deg);animation-delay:-7s}
+@keyframes ray{0%,100%{opacity:.0}45%,60%{opacity:.85}}
+
+/* ---------- HUD 角标与读数 ---------- */
+.hub-hud{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity 1.6s 1.4s}
+body.stage-hub .hub-hud{opacity:1}
+.hub-hud .c{position:absolute;width:34px;height:34px;border:2px solid rgba(150,235,255,.7)}
+.hub-hud .tl{left:2.4vw;top:3vh;border-right:0;border-bottom:0}
+.hub-hud .tr{right:2.4vw;top:3vh;border-left:0;border-bottom:0}
+.hub-hud .bl{left:2.4vw;bottom:3vh;border-right:0;border-top:0}
+.hub-hud .br{right:2.4vw;bottom:3vh;border-left:0;border-top:0}
+.hud-l,.hud-r{position:absolute;top:11vh;display:flex;flex-direction:column;gap:5px;font:11px var(--mono);letter-spacing:.28em;color:rgba(170,235,255,.8)}
+.hud-l{left:calc(2.4vw + 48px)}
+.hud-l b{font:600 15px var(--mono);color:#fff;letter-spacing:.3em;font-weight:400}
+.hud-l em{font-style:normal;color:rgba(255,255,255,.55)}
+.hud-r{right:calc(2.4vw + 48px);text-align:right}
+.hud-ticks{position:absolute;top:50%;width:10px;height:36vh;margin-top:-18vh;background:repeating-linear-gradient(180deg,rgba(150,235,255,.5) 0 1px,transparent 1px 12px);opacity:.55}
+.hud-ticks.l{left:2.4vw}.hud-ticks.r{right:2.4vw}
+.hub-flash{position:absolute;inset:0;z-index:7;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 50%,rgba(220,250,255,.9),rgba(120,210,255,.25) 50%,transparent 75%)}
+.hub-flash.on{animation:hflash .9s ease-out}
+@keyframes hflash{0%{opacity:.95}100%{opacity:0}}
+.hub-hint{z-index:6;color:rgba(190,240,255,.9)}
+
+/* ---------- 机甲手:手掌 + 四根可弯曲手指 ---------- */
+.hand-box{position:absolute;left:72.368%;top:28.162%;width:22.368%;height:28.055%;pointer-events:none}
+.hand-box .fg{position:absolute;left:0;top:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none;
+  transform-origin:var(--px) var(--py);rotate:calc(var(--c,0) * var(--r) * 1deg);translate:calc(var(--c,0) * var(--tx,0) * 1%) calc(var(--c,0) * var(--ty,0) * 1%)}
+.hand-box .f1{--px:14.7%;--py:84%;--r:30;--tx:3;--ty:-2}
+.hand-box .f2{--px:47.6%;--py:86%;--r:14;--tx:1;--ty:-3}
+.hand-box .f3{--px:73.5%;--py:77.7%;--r:-20;--tx:-2;--ty:-3}
+.hand-box .f4{--px:89.6%;--py:66%;--r:-36;--tx:-6;--ty:-2}
+.hand-box .palm{filter:drop-shadow(0 0 8px rgba(110,210,255,.35))}
+.hand-box .fg:not(.palm){filter:drop-shadow(0 0 6px rgba(110,210,255,.3))}
+.hand-box.squeeze{filter:brightness(1.35) drop-shadow(0 0 22px rgba(160,235,255,.9))}
+
+/* ---------- 球:被点中 / 被捏碎 ---------- */
+.orb.picked .orb-glass{animation:orbsqueeze .55s cubic-bezier(.5,0,.8,.4) forwards}
+@keyframes orbsqueeze{
+  0%{transform:scale(1);filter:brightness(1)}
+  55%{transform:scale(.82,.9);filter:brightness(2.2)}
+  100%{transform:scale(.55);filter:brightness(5);opacity:.1}
+}
+.orb.picked .orb-label{transition:opacity .25s;opacity:0}
+.orb.gone{opacity:0;pointer-events:none}
+.orb.dim{opacity:.25;filter:saturate(.5);transition:opacity .6s,filter .6s;pointer-events:none}
+
+/* 掌心光球 */
+.lightorb{position:absolute;left:0;top:0;width:var(--s,200px);height:var(--s,200px);margin:calc(var(--s,200px) / -2) 0 0 calc(var(--s,200px) / -2);border-radius:50%;pointer-events:none;z-index:6;
+  background:radial-gradient(circle,#fff 0,#f3feff 24%,rgba(170,240,255,.9) 42%,rgba(90,190,255,.45) 60%,rgba(60,120,255,.12) 72%,transparent 78%);
+  mix-blend-mode:screen;filter:blur(.5px);transform:scale(0);opacity:0;will-change:transform,opacity}
+.lightorb::before,.lightorb::after{content:"";position:absolute;inset:-60%;border-radius:50%;border:1px solid rgba(190,245,255,.55);animation:lring 2.2s linear infinite}
+.lightorb::after{inset:-110%;border-color:rgba(190,170,255,.35);animation-duration:3.4s;animation-direction:reverse}
+@keyframes lring{from{transform:rotate(0) scale(.96)}50%{transform:rotate(180deg) scale(1.04)}to{transform:rotate(360deg) scale(.96)}}
+
+/* 进入光球期间,整个 hub 向光球聚拢 */
+.hub.diving .hub-hud,.hub.diving .hub-hint{opacity:0;transition:opacity .4s}
+.hub.diving .hub-canvas{transition:filter 1.6s ease;filter:brightness(1.25) saturate(1.2)}
+
+/* ---------- 占位页 ---------- */
+.coming{display:grid;place-items:center;text-align:center}
+#cstars{position:absolute;inset:0;width:100%;height:100%}
+.coming-in{position:relative;z-index:2;padding:0 8vw}
+.coming h2{margin:14px 0 18px;font:600 clamp(40px,8vw,104px)/1.1 var(--serif);letter-spacing:.2em;color:#fff;text-shadow:0 0 36px rgba(95,230,255,.65)}
+.cm-desc{max-width:640px;margin:0 auto;font:300 15px/2 var(--cn);letter-spacing:.06em;color:var(--beige)}
+.cm-soon{margin:26px 0 8px;font:12px var(--mono);letter-spacing:.35em;color:rgba(255,58,94,.9)}
+.w-back2{margin-top:30px;font:12px var(--mono);letter-spacing:.3em;color:var(--beige);padding:11px 20px;border:1px solid rgba(220,217,212,.35);transition:.2s}
+.w-back2:hover{color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 14px rgba(95,230,255,.3)}
+.eyebrow{font:12px var(--mono);letter-spacing:.5em;color:var(--cyan)}
+
+@media (max-width:720px){
+  .hud-r,.hud-ticks,.hub-hint{display:none}
+  .hud-l{left:calc(2.4vw + 40px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .hl-mist i,.hl-rays i,.lightorb::before,.lightorb::after{animation:none}
+}
