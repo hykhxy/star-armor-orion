@@ -6,7 +6,10 @@
 'use strict';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const KEY = 'orion.create', MKEY = 'orion.mech';
-/* 多条线路:三个 jsDelivr 镜像 + 本站,依次回退 */
+const MEM = window.__ORION_MEM = window.__ORION_MEM || {};
+const lsGet = k => window.ORION_STORE ? window.ORION_STORE.get(k) : (()=>{ try { return localStorage.getItem(k); } catch(e){ return MEM[k] ?? null; } })();
+const lsSet = (k, v) => window.ORION_STORE ? window.ORION_STORE.set(k, v) : (()=>{ MEM[k]=String(v); try { localStorage.setItem(k, v); } catch(e){} return true; })();
+/* 多条线路:三个 jsDelivr 镜像 + github.io + 本站,依次回退 */
 const LINES = [
   'https://gcore.jsdelivr.net/gh/hykhxy/star-armor-orion@main/',
   'https://testingcf.jsdelivr.net/gh/hykhxy/star-armor-orion@main/',
@@ -14,10 +17,14 @@ const LINES = [
   'https://hykhxy.github.io/star-armor-orion/',
   ''
 ];
+const ACTIVE_LINES = () => {
+  const arr = (window.ORION_CDN ? [window.ORION_CDN] : []).concat(LINES.filter(x => x !== window.ORION_CDN));
+  return location.protocol === 'about:' ? arr.filter(Boolean) : arr;
+};
 const ABS = p => LINES[0] + p;
 /* 本站素材的外链 → 四条线路各一份(境内可达);用户自己填的外链原样返回 */
 const multi = l => (l && l.indexOf(LINES[0]) === 0) ? LINES.slice(0, 4).map(b => b + l.slice(LINES[0].length)).join('\n') : (l || '');
-const VER = '20261120c';   /* 素材版本号:换图后改这里,强制浏览器绕过旧缓存 */
+const VER = '20261120d';   /* 素材版本号:换图后改这里,强制浏览器绕过旧缓存 */
 const NOTE_FILE = '(本地上传的图片,仅保存在本机浏览器,没有外链)';
 const PORTS = [{ k: 'boy', n: '少男' }, { k: 'girl', n: '少女' }, { k: 'man', n: '青年' }, { k: 'lady', n: '美少女' }];
 const ROMAN = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ'];
@@ -33,10 +40,10 @@ let page = 1, inited = false, tab = 1, rolling = false, tk = 0;
 
 /* ---------- 图片:多线路回退 ---------- */
 function tryLines(path, ok, fail){
-  let i = 0;
+  const ls = ACTIVE_LINES(); let i = 0;
   (function next(){
-    if (i >= LINES.length){ fail && fail(); return; }
-    const u = LINES[i++] + path + (path.indexOf('?') < 0 ? '?v=' + VER : ''), im = new Image(); let done = false;
+    if (i >= ls.length){ fail && fail(); return; }
+    const u = ls[i++] + path + (path.indexOf('?') < 0 ? '?v=' + VER : ''), im = new Image(); let done = false;
     const t = setTimeout(() => { if (!done){ done = true; im.src = ''; next(); } }, 7000);
     im.onload = () => { if (done) return; done = true; clearTimeout(t); ok(u); };
     im.onerror = () => { if (done) return; done = true; clearTimeout(t); next(); };
@@ -107,7 +114,7 @@ function startDust(){
 
 /* ---------- 存取 ---------- */
 function load(){
-  try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d) S = Object.assign(S, d); } catch (e) {}
+  try { const d = JSON.parse(lsGet(KEY) || 'null'); if (d) S = Object.assign(S, d); } catch (e) {}
   if (!Array.isArray(S.talents)) S.talents = [];
   S.talents = S.talents.filter(id => TBY[id]).slice(0, 3);
   if (!S.port || !S.port.kind) S.port = { kind: 'builtin', key: 'boy', url: '' };
@@ -117,15 +124,15 @@ function readForm(){
 }
 function save(msg){
   readForm();
-  try { localStorage.setItem(KEY, JSON.stringify(S)); if (msg !== false) toast(typeof msg === 'string' ? msg : '已保存全部设定', false); sfx(880); return true; }
-  catch (e) { toast('保存失败:图片太大,浏览器存储空间不足,请换小一点的图或使用外链', true); return false; }
+  try { lsSet(KEY, JSON.stringify(S)); if (msg !== false) toast(typeof msg === 'string' ? msg : '已保存全部设定', false); sfx(880); return true; }
+  catch (e) { toast('保存失败:请换小一点的图或使用外链', true); return false; }
 }
 let toastT;
-function toast(t, warn){
+function toast(t, warn, ms){
   const el = $('#crToast'); el.textContent = t; el.classList.toggle('warn', !!warn); el.classList.add('on');
-  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600);
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), ms || 2600);
 }
-function pickedMech(){ try { return JSON.parse(localStorage.getItem(MKEY) || 'null'); } catch (e) { return null; } }
+function pickedMech(){ try { return JSON.parse(lsGet(MKEY) || 'null'); } catch (e) { return null; } }
 
 /* ---------- 图片文件 → 压缩 dataURL ---------- */
 function readImage(file, max, cb){
@@ -341,7 +348,7 @@ function buildAnswer(){
       <div><dt>天赋(${S.talents.length}/3)</dt><dd><div class="ans-tal">${S.talents.length ? S.talents.map(id => { const t = TBY[id], s = stOf(t.s); return `<div style="--c:${s.col}"><b>${esc(t.n)}</b><small>${s.tier} ${esc(s.cn)}</small><br>${esc(t.e)}${t.c ? `<div class="co">代价:${esc(t.c)}</div>` : '<div class="co free">无代价</div>'}</div>`; }).join('') : '<em>未选择天赋</em>'}</div></dd></div>
     </dl></div>
   </div>
-  <div class="ans-acts"><button class="cr-btn go" data-act="copyall">复制档案全文</button><button class="cr-btn" data-act="json">下载设定 .json</button><button class="cr-btn" data-act="close">关闭</button><button class="cr-btn go" data-act="saveclose">保存并关闭</button></div>`;
+  <div class="ans-acts">${window.ORION_EMBED ? '<button class="cr-btn go" data-act="sendtochat">填入聊天框开局</button>' : ''}<button class="cr-btn ${window.ORION_EMBED ? '' : 'go'}" data-act="copyall">复制档案全文</button><button class="cr-btn" data-act="json">下载设定 .json</button><button class="cr-btn" data-act="close">关闭</button><button class="cr-btn go" data-act="saveclose">保存并关闭</button></div>`;
   $$('#ansIn img[data-ref]').forEach(im => setImg(im, im.dataset.ref));
 }
 function downloadJson(){
@@ -392,6 +399,7 @@ function init(){
       const act = a.dataset.act;
       if (act === 'close') closeModals();
       else if (act === 'pick'){ S.place = a.dataset.id; renderSel(); closeModals(); save(false); toast('已选定开局地点:' + PBY[S.place].n); sfx(900); }
+      else if (act === 'sendtochat'){ const txt = textAll(); try { window.parent.postMessage({ type: 'rili-set-input', value: txt }, '*'); } catch (err) {} try { navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.writeText(txt); } catch (err) {} toast('已将创造档案填入下方聊天框！点击右侧「发送」即可按档案开局', false, 4500); sfx(960); }
       else if (act === 'copyall') copy(textAll());
       else if (act === 'json') downloadJson();
       else if (act === 'saveclose'){ save(); closeModals(); }
@@ -420,7 +428,7 @@ function init(){
   document.addEventListener('orion:mech', e => {
     const m = e.detail; if (!m) return;
     S.mech = { kind: 'pick', src: m.src, cn: m.cn, sid: m.sid, view: m.view };
-    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (err) {}
+    lsSet(KEY, JSON.stringify(S));
   });
 }
 function open(p){
