@@ -8,7 +8,7 @@
 .b-title h2{margin:0;font-size:26px;letter-spacing:.3em;font-weight:600}
 .b-title .eyebrow{margin:0 0 2px;font-size:10px}
 .q0{color:#9aa3ab}.q1{color:#e8eef2}.q2{color:#5aa8ff}.q3{color:#b57bff}.q4{color:#ffc24a}.q5{color:#ff5a5a}
-.b-main{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:minmax(300px,28%) 1fr minmax(300px,28%);gap:14px;padding:12px 22px 16px}
+.b-main{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:minmax(240px,26%) 1fr minmax(240px,26%);gap:14px;padding:12px 22px 16px}
 .b-lib,.b-stats{min-height:0;display:flex;flex-direction:column;border:1px solid rgba(95,243,255,.22);background:rgba(4,14,24,.72);backdrop-filter:blur(6px)}
 .b-slot{padding:8px 12px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid rgba(95,243,255,.12)}
 .b-slot b{letter-spacing:.2em}.b-slot i{font-size:11px;color:#6fb8cc;font-style:normal}
