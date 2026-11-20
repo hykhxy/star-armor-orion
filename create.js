@@ -14,6 +14,7 @@ const LINES = [
   ''
 ];
 const ABS = p => LINES[0] + p;
+const VER = '20261120b';   /* 素材版本号:换图后改这里,强制浏览器绕过旧缓存 */
 const NOTE_FILE = '(本地上传的图片,仅保存在本机浏览器,没有外链)';
 const PORTS = [{ k: 'boy', n: '少男' }, { k: 'girl', n: '少女' }, { k: 'man', n: '青年' }, { k: 'lady', n: '美少女' }];
 const ROMAN = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ'];
@@ -32,7 +33,7 @@ function tryLines(path, ok, fail){
   let i = 0;
   (function next(){
     if (i >= LINES.length){ fail && fail(); return; }
-    const u = LINES[i++] + path, im = new Image(); let done = false;
+    const u = LINES[i++] + path + (path.indexOf('?') < 0 ? '?v=' + VER : ''), im = new Image(); let done = false;
     const t = setTimeout(() => { if (!done){ done = true; im.src = ''; next(); } }, 7000);
     im.onload = () => { if (done) return; done = true; clearTimeout(t); ok(u); };
     im.onerror = () => { if (done) return; done = true; clearTimeout(t); next(); };
@@ -313,6 +314,10 @@ function copy(t){
 }
 function fallbackCopy(t, done){ const a = document.createElement('textarea'); a.value = t; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败,请手动选择文字', true); } a.remove(); }
 function openAnswer(){
+  try { buildAnswer(); } catch (err) { console.error(err); toast('创造答案生成失败:' + (err && err.message ? err.message : err), true); return; }
+  openModal($('#ansModal')); sfx(900);
+}
+function buildAnswer(){
   readForm(); save(false);
   const p = PBY[S.place], r = portRef(), m = mechRef(), reg = p ? REG[p.r - 1] : null;
   const val = v => v ? esc(v) : '<em>未设定</em>';
@@ -332,7 +337,6 @@ function openAnswer(){
   </div>
   <div class="ans-acts"><button class="cr-btn" data-act="copyall">复制全部设定</button><button class="cr-btn" data-act="json">下载设定 .json</button><button class="cr-btn" data-act="close">关闭</button><button class="cr-btn go" data-act="saveclose">保存并关闭</button></div>`;
   $$('#ansIn img[data-ref]').forEach(im => setImg(im, im.dataset.ref));
-  openModal($('#ansModal')); sfx(900);
 }
 function downloadJson(){
   const p = PBY[S.place], r = portRef(), m = mechRef();
