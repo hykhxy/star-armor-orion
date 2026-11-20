@@ -49,7 +49,57 @@ function setImg(img, ref, onfail){
   if (/^assets\//.test(ref)) tryLines(ref, u => { if (img._tk === my) img.src = u; }, () => { onfail && onfail(); });
   else { img.onerror = () => { onfail && onfail(); }; img.src = ref; }
 }
-function setBg(el, path){ tryLines(path, u => { el.style.backgroundImage = `url("${u}")`; }); }
+function setBg(el, path){ tryLines(path, u => { el.style.setProperty('--img', `url("${u}")`); }); }
+
+/* ---------- 视差:鼠标位置 → --mx/--my(-1…1),平滑跟随;顺带更新坐标读数 ---------- */
+let tx = 0, ty = 0, cx = 0, cy = 0, rafP = 0;
+function startParallax(){
+  const root = $('#create'), coord = $('#crCoord');
+  if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  root.addEventListener('mousemove', e => {
+    const w = innerWidth || 1, h = innerHeight || 1;
+    tx = (e.clientX / w) * 2 - 1; ty = (e.clientY / h) * 2 - 1;
+    if (coord) coord.textContent = `X ${(e.clientX / w * 360).toFixed(1).padStart(5, '0')} · Y ${(e.clientY / h * 180).toFixed(1).padStart(5, '0')}`;
+  });
+  root.addEventListener('mouseleave', () => { tx = 0; ty = 0; });
+  (function loop(){
+    rafP = requestAnimationFrame(loop);
+    if (!document.body.classList.contains('stage-create')) return;
+    cx += (tx - cx) * .07; cy += (ty - cy) * .07;
+    root.style.setProperty('--mx', cx.toFixed(4)); root.style.setProperty('--my', cy.toFixed(4));
+  })();
+}
+
+/* ---------- 尘埃画布:远近三层光点缓慢漂移 ---------- */
+function startDust(){
+  const cv = $('#crDust'); if (!cv) return;
+  const g = cv.getContext('2d'); let W = 0, H = 0, P = [];
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  function fit(){
+    W = cv.clientWidth; H = cv.clientHeight; cv.width = W * DPR; cv.height = H * DPR; g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const n = Math.round(W * H / 11000);
+    P = Array.from({ length: n }, () => {
+      const z = Math.random();
+      return { x: Math.random() * W, y: Math.random() * H, z, r: .5 + z * 2.2, vx: (Math.random() - .3) * (.1 + z * .5), vy: -(.05 + Math.random() * .25) * (.4 + z), a: .15 + Math.random() * .5, hue: Math.random() < .5 ? 190 : (Math.random() < .5 ? 330 : 42), ph: Math.random() * 6.28 };
+    });
+  }
+  fit(); addEventListener('resize', fit);
+  let t0 = 0;
+  (function loop(t){
+    requestAnimationFrame(loop);
+    if (!document.body.classList.contains('stage-create')) return;
+    g.clearRect(0, 0, W, H);
+    for (const p of P){
+      p.x += p.vx + cx * p.z * .5; p.y += p.vy;
+      if (p.y < -6) p.y = H + 6; if (p.x < -6) p.x = W + 6; if (p.x > W + 6) p.x = -6;
+      const tw = .55 + .45 * Math.sin(t / 900 + p.ph);
+      g.beginPath(); g.fillStyle = `hsla(${p.hue},95%,${p.hue === 42 ? 70 : 72}%,${p.a * tw})`;
+      g.shadowColor = `hsla(${p.hue},100%,65%,.9)`; g.shadowBlur = p.r * 4;
+      g.arc(p.x - cx * p.z * 14, p.y - cy * p.z * 9, p.r, 0, 6.2832); g.fill();
+    }
+    g.shadowBlur = 0;
+  })(0);
+}
 
 /* ---------- 存取 ---------- */
 function load(){
@@ -302,6 +352,7 @@ function init(){
   setBg($('#mapImg'), 'assets/create/map.webp');
   tryLines('assets/create/frame.webp', u => $('#create').style.setProperty('--frame', `url("${u}")`));
   buildPortOpts(); buildMap(); fillForm();
+  startParallax(); startDust();
   $$('.cm-box').forEach(b => b.insertAdjacentHTML('afterbegin', '<button type="button" class="cm-x" data-act="close" aria-label="关闭">×</button>'));
 
   // 第 1 页
@@ -321,8 +372,6 @@ function init(){
     $$('#mapPins .pin,#mapRegs .map-reg').forEach(x => x.classList.toggle('r-on', !on && x.dataset.r === id));
     sfx(520);
   });
-  $('#mapRegs').addEventListener('click', () => {});
-  $$('#mapRegs .map-reg').forEach(x => x.classList.remove('r-on'));
   $('#b2').addEventListener('click', () => goPage(1, true));
   $('#n2').addEventListener('click', () => { if (!S.place){ toast('请先在地图上选定一个开局地点', true); return; } save(false); goPage(3, true); });
   // 弹窗
