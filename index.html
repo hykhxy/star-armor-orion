@@ -11,14 +11,43 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Share+Tech+Mono&family=Noto+Serif+SC:wght@300;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261120c">
-<link rel="stylesheet" href="fx.css?v=20261120c">
-<link rel="stylesheet" href="world.css?v=20261120c">
-<link rel="stylesheet" href="build.css?v=20261120c">
-<link rel="stylesheet" href="create.css?v=20261120c">
+<link rel="stylesheet" href="style.css?v=20261120d">
+<link rel="stylesheet" href="fx.css?v=20261120d">
+<link rel="stylesheet" href="world.css?v=20261120d">
+<link rel="stylesheet" href="build.css?v=20261120d">
+<link rel="stylesheet" href="create.css?v=20261120d">
 <script>
-window.ORION_CDN='https://gcore.jsdelivr.net/gh/hykhxy/star-armor-orion@main/';
-document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('img[src^="assets/"]').forEach(function(i){var o=i.getAttribute('src');i.onerror=function(){i.onerror=null;i.src=o};i.src=window.ORION_CDN+o})});
+(function(){
+  var isSrcdoc = location.protocol === 'about:';
+  var baseLines = [
+    'https://testingcf.jsdelivr.net/gh/hykhxy/star-armor-orion@main/',
+    'https://gcore.jsdelivr.net/gh/hykhxy/star-armor-orion@main/',
+    'https://cdn.jsdmirror.com/gh/hykhxy/star-armor-orion@main/',
+    'https://hykhxy.github.io/star-armor-orion/'
+  ];
+  if (!isSrcdoc) baseLines.push('');
+  window.ORION_LINES = window.ORION_LINES || baseLines;
+  window.ORION_CDN = window.ORION_CDN || window.ORION_LINES[0];
+  window.ORION_EMBED = window.parent && window.parent !== window;
+  var MEM = window.__ORION_MEM = window.__ORION_MEM || {};
+  window.ORION_STORE = {
+    get: function(k){ try { return localStorage.getItem(k); } catch(e) { return Object.prototype.hasOwnProperty.call(MEM, k) ? MEM[k] : null; } },
+    set: function(k, v){ MEM[k] = String(v); try { localStorage.setItem(k, v); } catch(e) {} return true; }
+  };
+  function setImg(el, path){
+    if (!el || !path) return;
+    var lines = (window.ORION_CDN ? [window.ORION_CDN] : []).concat(window.ORION_LINES.filter(function(x){ return x !== window.ORION_CDN; }));
+    var i = 0;
+    el.onerror = function(){ if (i < lines.length) el.src = lines[i++] + path; else el.onerror = null; };
+    el.src = lines[i++] + path;
+  }
+  window.ORION_RES = { setImg: setImg, url: function(p){ return (window.ORION_CDN || '') + p; } };
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('img[src^="assets/"]').forEach(function(i){ setImg(i, i.getAttribute('src')); });
+    var au = document.getElementById('welcomeAudio');
+    if (au && /^assets\//.test(au.getAttribute('src') || '')) au.src = (window.ORION_CDN || '') + au.getAttribute('src');
+  });
+})();
 </script>
 </head>
 <body class="stage-boot">
@@ -93,8 +122,23 @@ document.addEventListener('DOMContentLoaded',function(){document.querySelectorAl
     <div class="hud-ticks l"></div><div class="hud-ticks r"></div>
   </div>
   <div class="hub-flash" id="hubflash"></div>
+  <div class="hub-quick" id="hubQuick">
+    <button type="button" class="hi" data-q="create">创造角色</button>
+    <button type="button" data-q="build">选择机甲</button>
+    <button type="button" data-q="world">世界观</button>
+    <button type="button" data-q="start">快速开局</button>
+  </div>
   <p class="hub-hint">点击星球进入 &nbsp;/&nbsp; ← → 转动轨道</p>
 </section>
+<div class="quick-pop" id="quickPop" aria-hidden="true">
+  <div class="quick-box">
+    <h3>选择开局方式 · 万机拆装纪元</h3>
+    <p class="sub">可直接用以下 3 种预设开局，或去【创造角色】捏好人物、地点、天赋和机甲生成【创造档案】。</p>
+    <div class="quick-list" id="quickList"></div>
+    <div class="quick-foot"><button type="button" id="quickToCreate">去创造角色 ▸</button><button type="button" id="quickClose">关闭</button></div>
+  </div>
+</div>
+<div class="hub-toast" id="hubToast"></div>
 
 <div class="grade"></div>
 <canvas id="noise"></canvas>
@@ -562,11 +606,11 @@ document.addEventListener('DOMContentLoaded',function(){document.querySelectorAl
 </section>
 
 <audio id="welcomeAudio" src="assets/welcome-master.mp3" preload="auto"></audio>
-<script src="places.js?v=20261120c"></script>
-<script src="talents.js?v=20261120c"></script>
-<script src="create.js?v=20261120c"></script>
-<script src="build.js?v=20261120c"></script>
-<script src="main.js?v=20261120c"></script>
+<script src="places.js?v=20261120d"></script>
+<script src="talents.js?v=20261120d"></script>
+<script src="create.js?v=20261120d"></script>
+<script src="build.js?v=20261120d"></script>
+<script src="main.js?v=20261120d"></script>
 </body>
 </html>
 
