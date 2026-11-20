@@ -205,8 +205,8 @@ body.stage-hub .hub-zoom{transform:none;filter:none}
 .hub-canvas{position:absolute;will-change:transform;transform-origin:50% 50%}
 .hl{position:absolute;inset:0}
 #stageBack,#stageBack *,#stageFront,#stageFront *,#hubfar,#mist,#rays,#rings{pointer-events:none}
-.hl-bg,.hl-mech,.hl-armorglow,.hl-headimg{background-image:url(assets/hub-bg.jpg);background-size:100% 100%;background-repeat:no-repeat}
-.hl-mech{-webkit-mask:url(assets/mask-mech.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-mech.png) 0 0/100% 100% no-repeat}
+.hl-bg,.hl-mech,.hl-armorglow,.hl-headimg{background-image:var(--hub-bg,url(assets/hub-bg.jpg));background-size:100% 100%;background-repeat:no-repeat}
+.hl-mech{-webkit-mask:var(--mask-mech,url(assets/mask-mech.png)) 0 0/100% 100% no-repeat;mask:var(--mask-mech,url(assets/mask-mech.png)) 0 0/100% 100% no-repeat}
 
 /* 整体轻摇 + 呼吸(支点在机甲下方) */
 .hl-sway{transform-origin:52% 98%;animation:sway 7.5s ease-in-out infinite alternate}
@@ -215,7 +215,7 @@ body.stage-hub .hub-zoom{transform:none;filter:none}
 @keyframes breath{from{transform:scale(1,1)}to{transform:scale(1.003,1.007)}}
 
 /* 灯带脉动 + 装甲扫光 */
-.hl-armorglow{-webkit-mask:url(assets/mask-glow.png) 0 0/100% 100% no-repeat;mask:url(assets/mask-glow.png) 0 0/100% 100% no-repeat;mix-blend-mode:screen;filter:brightness(2.4) saturate(1.7);animation:glowpulse 3.4s ease-in-out infinite alternate}
+.hl-armorglow{-webkit-mask:var(--mask-glow,url(assets/mask-glow.png)) 0 0/100% 100% no-repeat;mask:var(--mask-glow,url(assets/mask-glow.png)) 0 0/100% 100% no-repeat;mix-blend-mode:screen;filter:brightness(2.4) saturate(1.7);animation:glowpulse 3.4s ease-in-out infinite alternate}
 @keyframes glowpulse{from{opacity:.05}to{opacity:.8}}
 
 /* 头部:微点头 + 眼睛 */
@@ -264,9 +264,27 @@ body.stage-hub .hub-zoom{transform:none;filter:none}
 
 #hubfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .hub-hint{position:absolute;left:50%;bottom:2.8vh;transform:translateX(-50%);z-index:6;font:11px var(--mono);letter-spacing:.3em;opacity:.5;white-space:nowrap}
+.hub-quick{position:absolute;right:148px;top:18px;z-index:22;display:flex;flex-wrap:wrap;gap:6px;max-width:460px;justify-content:flex-end}
+.hub-quick button{background:rgba(4,12,24,.72);border:1px solid rgba(120,220,255,.38);color:#cfeffa;padding:6px 12px;font:12px var(--cn);letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(6px);transition:.2s}
+.hub-quick button:hover{border-color:#7be8ff;color:#fff;box-shadow:0 0 12px rgba(95,230,255,.35)}
+.hub-quick button.hi{background:linear-gradient(135deg,rgba(45,165,205,.38),rgba(130,90,220,.32));border-color:#5fe6ff;color:#fff}
+.quick-pop{position:fixed;inset:0;z-index:60;display:none;place-items:center;padding:16px;background:rgba(2,6,14,.78);backdrop-filter:blur(6px)}
+.quick-pop.on{display:grid}
+.quick-box{width:min(680px,94vw);background:rgba(6,14,26,.96);border:1px solid rgba(95,230,255,.45);padding:20px 22px;color:#dff6ff;box-shadow:0 0 40px rgba(60,180,255,.2)}
+.quick-box h3{margin:0 0 6px;font:600 18px var(--cn);letter-spacing:.16em;color:#fff}
+.quick-box p.sub{margin:0 0 14px;font-size:12px;color:#8cc8dc}
+.quick-list{display:grid;gap:8px}
+.quick-item{text-align:left;background:rgba(12,28,48,.75);border:1px solid rgba(95,230,255,.28);color:#dff6ff;padding:10px 14px;cursor:pointer;transition:.2s}
+.quick-item:hover{border-color:#5fe6ff;background:rgba(22,52,86,.85)}
+.quick-item b{display:block;font-size:14px;color:#7be8ff;margin-bottom:3px}
+.quick-item span{font-size:12px;color:#b8deec;line-height:1.5}
+.quick-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.quick-foot button{background:none;border:1px solid rgba(95,230,255,.4);color:#cfeffa;padding:6px 14px;cursor:pointer}
+.hub-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);z-index:90;padding:9px 18px;background:rgba(4,18,32,.95);border:1px solid #5fe6ff;color:#e6fbff;font-size:13px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.hub-toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 
-.hub-backdrop{position:absolute;inset:-6%;background:url(assets/hub-bg.jpg) center/cover;filter:blur(24px) brightness(.55) saturate(1.2)}
+.hub-backdrop{position:absolute;inset:-6%;background:var(--hub-bg,url(assets/hub-bg.jpg)) center/cover;filter:blur(24px) brightness(.55) saturate(1.2)}
 .hl-rings.spin{filter:brightness(1.9) drop-shadow(0 0 8px rgba(120,220,255,.8));transition:filter .4s}
 .hl-rings{transition:filter .8s}
 /* 主菜单:减弱全局暗角/调色,让机甲亮起来 */
