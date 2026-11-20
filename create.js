@@ -1,5 +1,5 @@
 /* =====================================================
-   create.js —— 创造角色(三页):身份 / 开局地点 / 天赋与机甲 + 创造答案
+   create.js —— 创造角色(三页):身份 / 开局地点 / 天赋与机甲 + 创造档案
    依赖:places.js(ORION_REGIONS / ORION_PLACES)、talents.js(ORION_TSTAGES / ORION_TALENTS)
    ===================================================== */
 (function(){
@@ -9,12 +9,15 @@ const KEY = 'orion.create', MKEY = 'orion.mech';
 /* 多条线路:三个 jsDelivr 镜像 + 本站,依次回退 */
 const LINES = [
   'https://gcore.jsdelivr.net/gh/hykhxy/star-armor-orion@main/',
-  'https://fastly.jsdelivr.net/gh/hykhxy/star-armor-orion@main/',
   'https://testingcf.jsdelivr.net/gh/hykhxy/star-armor-orion@main/',
+  'https://cdn.jsdmirror.com/gh/hykhxy/star-armor-orion@main/',
+  'https://hykhxy.github.io/star-armor-orion/',
   ''
 ];
 const ABS = p => LINES[0] + p;
-const VER = '20261120b';   /* 素材版本号:换图后改这里,强制浏览器绕过旧缓存 */
+/* 本站素材的外链 → 四条线路各一份(境内可达);用户自己填的外链原样返回 */
+const multi = l => (l && l.indexOf(LINES[0]) === 0) ? LINES.slice(0, 4).map(b => b + l.slice(LINES[0].length)).join('\n') : (l || '');
+const VER = '20261120c';   /* 素材版本号:换图后改这里,强制浏览器绕过旧缓存 */
 const NOTE_FILE = '(本地上传的图片,仅保存在本机浏览器,没有外链)';
 const PORTS = [{ k: 'boy', n: '少男' }, { k: 'girl', n: '少女' }, { k: 'man', n: '青年' }, { k: 'lady', n: '美少女' }];
 const ROMAN = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ'];
@@ -299,13 +302,16 @@ function randomDraw(){
   }, 110);
 }
 
-/* ---------- 创造答案 ---------- */
+/* ---------- 创造档案 ---------- */
 function textAll(){
   const p = PBY[S.place], r = portRef(), m = mechRef();
-  const tl = S.talents.map(id => { const t = TBY[id], s = stOf(t.s); return `  · [${s.tier} ${s.cn}] ${t.n}:${t.e}${t.c ? '  代价:' + t.c : '  (无代价)'}`; }).join('\n') || '  (未选择)';
-  return ['【创造答案 · ORION】', `姓名:${S.name || '—'}`, `性别:${S.gender || '—'}`, `身材样貌:${S.look || '—'}`, `性格:${S.pers || '—'}`,
-    `开局地点:${p ? p.id + ' ' + p.n + '(' + REG[p.r - 1].cn + ';控制方:' + p.ctl + ')' : '—'}`, '天赋:\n' + tl,
-    `机甲:${S.mech ? (S.mech.cn || '自定义机甲') : '—'}`, `头像立绘外链:${r.avlink}`, `主角立绘外链:${r.link}`, `机甲立绘外链:${m.link || '—'}`].join('\n');
+  const tl = S.talents.map((id, i) => { const t = TBY[id], s = stOf(t.s); return `  ${i + 1}. [${s.tier} ${s.cn}] ${t.n}\n     效果:${t.e}\n     代价:${t.c ? t.c : '无(Ⅳ/Ⅴ 阶天赋没有代价)'}`; }).join('\n') || '  (未选择)';
+  const pl = p ? [`  地点:${p.id} ${p.n}`, `  区域:${REG[p.r - 1].cn}`, `  海拔:${p.alt}`, `  控制方:${p.ctl}`, `  核心物资:${p.goods}`, `  铁律:${p.rule}`].join('\n') : '  —';
+  return ['【创造档案 · ORION】', '(把这段档案整段发给《万机拆装纪元》,主持人会按它开局)', '',
+    `姓名:${S.name || '—'}`, `性别:${S.gender || '—'}`, `身材样貌:${S.look || '—'}`, `性格:${S.pers || '—'}`, '',
+    '开局地点:\n' + pl, '', `天赋(${S.talents.length}/3):\n` + tl, '',
+    `机甲:${S.mech ? (S.mech.cn || '自定义机甲') : '—'}`, '',
+    '头像立绘外链(多线路,任选一条能打开的):\n' + (multi(r.avlink) || '—'), '', '主角立绘外链:\n' + (multi(r.link) || '—'), '', '机甲立绘外链:\n' + (multi(m.link) || '—')].join('\n');
 }
 function copy(t){
   const done = () => toast('已复制到剪贴板', false);
@@ -314,15 +320,15 @@ function copy(t){
 }
 function fallbackCopy(t, done){ const a = document.createElement('textarea'); a.value = t; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败,请手动选择文字', true); } a.remove(); }
 function openAnswer(){
-  try { buildAnswer(); } catch (err) { console.error(err); toast('创造答案生成失败:' + (err && err.message ? err.message : err), true); return; }
+  try { buildAnswer(); } catch (err) { console.error(err); toast('创造档案生成失败:' + (err && err.message ? err.message : err), true); return; }
   openModal($('#ansModal')); sfx(900);
 }
 function buildAnswer(){
   readForm(); save(false);
   const p = PBY[S.place], r = portRef(), m = mechRef(), reg = p ? REG[p.r - 1] : null;
   const val = v => v ? esc(v) : '<em>未设定</em>';
-  const imgBox = (cap, ref, link, av) => `<div class="ans-im"><div class="box">${ref ? `<img data-ref="${esc(ref)}" class="${av ? 'av' : ''}" alt="${cap}">` : '<i>未设定</i>'}</div><b>${cap}</b><textarea class="lk" readonly>${esc(link || '')}</textarea><button type="button" class="cp" data-t="${esc(link || '')}">复制外链</button></div>`;
-  $('#ansIn').innerHTML = `<p class="ans-h">CREATION RESULT</p><h3 class="ans-t">创造答案</h3>
+  const imgBox = (cap, ref, link, av) => `<div class="ans-im"><div class="box">${ref ? `<img data-ref="${esc(ref)}" class="${av ? 'av' : ''}" alt="${cap}">` : '<i>未设定</i>'}</div><b>${cap}</b><textarea class="lk" readonly>${esc(multi(link))}</textarea><button type="button" class="cp" data-t="${esc(multi(link))}">复制外链</button></div>`;
+  $('#ansIn').innerHTML = `<p class="ans-h">CREATION DOSSIER</p><h3 class="ans-t">创造档案</h3>
   <div class="ans-g">
     <div class="ans-imgs">${imgBox('头像立绘', r.av, r.avlink, true)}${imgBox('主角立绘', r.full, r.link)}${imgBox('机甲立绘', m.src, m.link)}</div>
     <div class="ans-tx"><dl>
@@ -330,19 +336,19 @@ function buildAnswer(){
       <div><dt>性别</dt><dd>${val(S.gender)}</dd></div>
       <div><dt>身材样貌</dt><dd>${val(S.look)}</dd></div>
       <div><dt>性格</dt><dd>${val(S.pers)}</dd></div>
-      <div><dt>开局地点</dt><dd>${p ? `${esc(p.id)} ${esc(p.n)}<br><small style="opacity:.7">${esc(reg.cn)} · 控制方:${esc(p.ctl)}</small>` : '<em>未设定</em>'}</dd></div>
+      <div><dt>开局地点</dt><dd>${p ? `${esc(p.id)} ${esc(p.n)}<br><small style="opacity:.75">${esc(reg.cn)} · ${esc(p.alt)}<br>控制方:${esc(p.ctl)}<br>核心物资:${esc(p.goods)}<br>铁律:${esc(p.rule)}</small>` : '<em>未设定</em>'}</dd></div>
       <div><dt>机甲</dt><dd>${S.mech ? esc(S.mech.cn || '自定义机甲') : '<em>未设定</em>'}</dd></div>
       <div><dt>天赋(${S.talents.length}/3)</dt><dd><div class="ans-tal">${S.talents.length ? S.talents.map(id => { const t = TBY[id], s = stOf(t.s); return `<div style="--c:${s.col}"><b>${esc(t.n)}</b><small>${s.tier} ${esc(s.cn)}</small><br>${esc(t.e)}${t.c ? `<div class="co">代价:${esc(t.c)}</div>` : '<div class="co free">无代价</div>'}</div>`; }).join('') : '<em>未选择天赋</em>'}</div></dd></div>
     </dl></div>
   </div>
-  <div class="ans-acts"><button class="cr-btn" data-act="copyall">复制全部设定</button><button class="cr-btn" data-act="json">下载设定 .json</button><button class="cr-btn" data-act="close">关闭</button><button class="cr-btn go" data-act="saveclose">保存并关闭</button></div>`;
+  <div class="ans-acts"><button class="cr-btn go" data-act="copyall">复制档案全文</button><button class="cr-btn" data-act="json">下载设定 .json</button><button class="cr-btn" data-act="close">关闭</button><button class="cr-btn go" data-act="saveclose">保存并关闭</button></div>`;
   $$('#ansIn img[data-ref]').forEach(im => setImg(im, im.dataset.ref));
 }
 function downloadJson(){
   const p = PBY[S.place], r = portRef(), m = mechRef();
   const o = { name: S.name, gender: S.gender, look: S.look, personality: S.pers, start: p ? { id: p.id, name: p.n, region: REG[p.r - 1].cn, controller: p.ctl } : null,
     talents: S.talents.map(id => { const t = TBY[id]; return { id, stage: t.s, name: t.n, effect: t.e, cost: t.c || null }; }),
-    mech: S.mech ? { name: S.mech.cn || null, kind: S.mech.kind } : null, links: { avatar: r.avlink, portrait: r.link, mech: m.link || null } };
+    mech: S.mech ? { name: S.mech.cn || null, kind: S.mech.kind } : null, links: { avatar: multi(r.avlink).split('\n'), portrait: multi(r.link).split('\n'), mech: m.link ? multi(m.link).split('\n') : null } };
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(o, null, 2)], { type: 'application/json' }));
   a.download = (S.name || '角色') + '-设定.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
