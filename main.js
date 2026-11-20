@@ -269,8 +269,21 @@ const TAB = [];
 })();
 
 // 手:手掌 + 四根手指(独立图层,可弯曲)
-handbox.innerHTML = '<img class="fg palm" src="assets/palm.webp" alt="" draggable="false">' +
-  [1, 2, 3, 4].map(k => `<img class="fg f${k}" src="assets/finger${k}.webp" alt="" draggable="false">`).join('');
+handbox.innerHTML = '<img class="fg palm" data-src="assets/palm.webp" alt="" draggable="false">' +
+  [1, 2, 3, 4].map(k => `<img class="fg f${k}" data-src="assets/finger${k}.webp" alt="" draggable="false">`).join('');
+handbox.querySelectorAll('img[data-src]').forEach(im => {
+  const p = im.dataset.src;
+  if (window.ORION_RES && window.ORION_RES.setImg) window.ORION_RES.setImg(im, p); else im.src = p;
+});
+(function applyHubBgVars(){
+  const root = document.documentElement.style;
+  const cdn = window.ORION_CDN || '';
+  if (cdn || location.protocol === 'about:'){
+    root.setProperty('--hub-bg', `url("${cdn}assets/hub-bg.jpg")`);
+    root.setProperty('--mask-mech', `url("${cdn}assets/mask-mech.png")`);
+    root.setProperty('--mask-glow', `url("${cdn}assets/mask-glow.png")`);
+  }
+})();
 const fingers = [...handbox.querySelectorAll('.fg:not(.palm)')];
 function setCurl(c){
   fingers.forEach((f, j) => f.style.setProperty('--c', clamp(c * 1.28 - j * .09, 0, 1).toFixed(3)));
@@ -656,12 +669,12 @@ $('#crBack').addEventListener('click', e => { e.stopPropagation(); returnToHub()
 $('#bBack').addEventListener('click', e => { e.stopPropagation(); if (window.__fromCreate) OrionNav.toCreate(3); else returnToHub(); });
 let buildActive = false, createActive = false;
 function openBuild(){
-  setStage('build'); buildActive = true; createActive = false; PE = null;
+  inHub = false; setStage('build'); buildActive = true; createActive = false; worldActive = false; PE = null;
   blip(200, 1.1, 'sine', .05, 700);
   if (window.OrionBuild) window.OrionBuild.open();
 }
 function openCreate(page){
-  setStage('create'); createActive = true; buildActive = false; PE = null;
+  inHub = false; setStage('create'); createActive = true; buildActive = false; worldActive = false; PE = null;
   blip(200, 1.1, 'sine', .05, 700);
   if (window.OrionCreate) window.OrionCreate.open(page);
 }
@@ -672,6 +685,57 @@ window.OrionNav = {
   toCreate(page){ window.__fromCreate = false; openCreate(page); }
 };
 document.addEventListener('orion:mech', () => { if (window.__fromCreate && has('build')) setTimeout(() => { if (window.__fromCreate && has('build')) OrionNav.toCreate(3); }, 900); });
+
+/* ---------- 快捷直达 & 平台一键开局 ---------- */
+const PRESETS = [
+  { t: '1. 底层鬼手学徒', d: '起步于第九区锈水沟，一阶魔改贴身甲（高耦合潜质），擅长极限手搓拆装与以弱胜强。',
+    v: '我选择【1. 底层鬼手学徒】开局：起步于新巴比伦·第九拆装区锈水沟，持有高耦合潜质的一阶魔改贴身甲，请按此开局！' },
+  { t: '2. 学院岛落魄旁系', d: '起步于赫菲斯托斯学院岛，二阶制式“白鹭 I 型”贴身甲与“白骑士”高达使用权，擅长精密拓扑。',
+    v: '我选择【2. 学院岛落魄旁系】开局：起步于赫菲斯托斯学院岛，持有二阶制式“白鹭 I 型”贴身甲与“白骑士”高达使用权，请按此开局！' },
+  { t: '3. 荒野孤狼骑手', d: '起步于赤砂走廊风眼加油站，二阶“野马”越野摩托贴身甲，擅长极速飙车与荒野劫镖。',
+    v: '我选择【3. 荒野孤狼骑手】开局：起步于赤砂走廊风眼加油站，持有二阶“野马”越野摩托贴身甲，请按此开局！' }
+];
+let hToastT = null;
+function hubToast(msg){
+  const el = $('#hubToast'); if (!el) return;
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(hToastT); hToastT = setTimeout(() => el.classList.remove('on'), 4200);
+}
+function sendToPlatform(text, label){
+  if (window.ORION_EMBED){
+    try { window.parent.postMessage({ type: 'rili-set-input', value: text }, '*'); } catch (e) {}
+    hubToast(`已填入「${label}」到下方聊天框，点右侧发送即可开局`);
+  } else {
+    try { navigator.clipboard && navigator.clipboard.writeText && navigator.clipboard.writeText(text); } catch (e) {}
+    hubToast(`已复制「${label}」，粘贴到对话即可开局`);
+  }
+  blip(920, .09, 'triangle', .04, 220);
+}
+(function bindQuick(){
+  const ql = $('#quickList'), pop = $('#quickPop'), bar = $('#hubQuick');
+  if (ql) ql.innerHTML = PRESETS.map((p, i) => `<button type="button" class="quick-item" data-i="${i}"><b>${p.t}</b><span>${p.d}</span></button>`).join('');
+  if (bar) bar.addEventListener('click', e => {
+    e.stopPropagation();
+    const b = e.target.closest('button[data-q]'); if (!b || locked) return;
+    const q = b.dataset.q;
+    if (q === 'create') { window.__fromCreate = false; openCreate(1); }
+    else if (q === 'build') { window.__fromCreate = false; openBuild(); }
+    else if (q === 'world') { inHub = false; openWorld(); }
+    else if (q === 'start' && pop) pop.classList.add('on');
+  });
+  if (pop) pop.addEventListener('click', e => {
+    e.stopPropagation();
+    const it = e.target.closest('.quick-item');
+    if (it){ const p = PRESETS[+it.dataset.i]; pop.classList.remove('on'); sendToPlatform(p.v, p.t); return; }
+    if (e.target === pop) pop.classList.remove('on');
+  });
+  $('#quickClose') && $('#quickClose').addEventListener('click', () => pop && pop.classList.remove('on'));
+  $('#quickToCreate') && $('#quickToCreate').addEventListener('click', () => { pop && pop.classList.remove('on'); window.__fromCreate = false; openCreate(1); });
+  document.querySelectorAll('#ch-11 .origins article').forEach((art, idx) => {
+    art.style.cursor = 'pointer';
+    art.addEventListener('click', () => { const p = PRESETS[idx]; if (p) sendToPlatform(p.v, p.t); });
+  });
+})();
 
 /* ---------- 键盘 ---------- */
 document.addEventListener('keydown', e => {
