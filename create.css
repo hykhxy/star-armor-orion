@@ -294,7 +294,7 @@ body.stage-create .create{opacity:1;pointer-events:auto}
 .ans-im .box img.av{object-fit:cover;object-position:50% 12%}
 .ans-im .box i{font:11px var(--mono);color:rgba(200,215,225,.4);font-style:normal}
 .ans-im b{font-size:12px;letter-spacing:.2em;color:var(--gold);text-align:center;font-weight:400}
-.ans-im .lk{width:100%;font:10.5px/1.4 var(--mono);padding:4px 6px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);color:#bfe8f4;resize:none;height:54px;word-break:break-all}
+.ans-im .lk{width:100%;font:10.5px/1.4 var(--mono);padding:4px 6px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);color:#bfe8f4;resize:none;height:104px;word-break:break-all}
 .ans-im .cp{padding:3px 0;font-size:11px;background:rgba(255,207,122,.12);border:1px solid rgba(255,207,122,.4);color:var(--gold)}
 .ans-im .cp:hover{background:var(--gold);color:#111}
 .ans-tx dl{display:grid;gap:8px;margin:0}
@@ -307,7 +307,7 @@ body.stage-create .create{opacity:1;pointer-events:auto}
 .ans-tal b{color:#fff;font-family:var(--serif);letter-spacing:.05em}
 .ans-tal small{font:10px var(--mono);letter-spacing:.2em;color:var(--c);margin-left:6px}
 .ans-tal .co{color:#ff9a86;font-size:12px}.ans-tal .co.free{color:#9dffc4}
-.ans-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.ans-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;position:sticky;bottom:-8px;z-index:3;padding:12px 0 8px;background:linear-gradient(180deg,rgba(8,8,12,0),rgba(8,8,12,.94) 32%)}
 
 /* ---------- 响应式:窄屏回到顺序流,保留视差与色差 ---------- */
 @media (max-width:1180px),(max-height:700px){
