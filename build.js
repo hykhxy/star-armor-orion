@@ -8,6 +8,9 @@
 'use strict';
 const $ = s => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const MEM = window.__ORION_MEM = window.__ORION_MEM || {};
+const lsGet = k => window.ORION_STORE ? window.ORION_STORE.get(k) : (()=>{ try { return localStorage.getItem(k); } catch(e){ return MEM[k] ?? null; } })();
+const lsSet = (k, v) => window.ORION_STORE ? window.ORION_STORE.set(k, v) : (()=>{ MEM[k]=String(v); try { localStorage.setItem(k, v); } catch(e){} })();
 
 /* ---------- 基础表 ---------- */
 const QUAL = [
@@ -89,7 +92,7 @@ const partsFor = slot => Object.values(PARTS).filter(p => slotFits(slot, p)).sor
 /* ---------- 状态 ---------- */
 let eq = {};                          // slot -> part key
 let sel = 'torso';
-try { eq = JSON.parse(localStorage.getItem('orion.build2') || '{}') || {}; } catch (e) { eq = {}; }
+try { eq = JSON.parse(lsGet('orion.build2') || '{}') || {}; } catch (e) { eq = {}; }
 
 /* ---------- 数值结算 ---------- */
 function calc(){
@@ -155,6 +158,10 @@ function calc(){
 
 /* ---------- 选择机甲:整机侧身 / 对角正交图 ---------- */
 const cdn = p => (window.ORION_CDN || '') + p;
+function setSrc(img, u){
+  if (window.ORION_RES && window.ORION_RES.setImg) { window.ORION_RES.setImg(img, u); return; }
+  img.src = cdn(u); img.onerror = () => { img.onerror = null; if (location.protocol !== 'about:') img.src = u; };
+}
 const BLURB = {
   seraph: '白金羽翼与圣辉长枪,高机动的空域压制型。',
   star:   '紫蓝流线装甲与光束长枪,均衡的星际制式旗舰机。',
@@ -171,7 +178,6 @@ const BLURB = {
 let view = 'iso', cur = null, SZ = {};
 const IDS = SERIES.map(s => s.id);
 const uOf = (v, sid, t) => `assets/pick/${t ? 't-' : ''}${v}-${sid}.webp`;
-function setSrc(img, u){ img.src = cdn(u); img.onerror = () => { img.onerror = null; img.src = u; }; }
 function fullSet(sid){ return { head: sid + '/head', torso: sid + '/torso', armL: sid + '/armL', armR: sid + '/armR', legL: sid + '/legL', legR: sid + '/legR' }; }
 
 function renderList(){
@@ -221,7 +227,7 @@ function pick(sid, quiet){
   if (!$('#bList .pc')) renderList();
   document.querySelectorAll('#bList .pc').forEach(b => b.classList.toggle('on', b.dataset.sid === cur));
   renderStage(); renderStats();
-  try { localStorage.setItem('orion.pick', sid); } catch (e) {}
+  lsSet('orion.pick', sid);
   const on = $('#bList .pc.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   if (!quiet) sfx(640);
 }
@@ -245,7 +251,7 @@ function savePng(){
 function confirmMech(){
   if (!cur) return;
   const m = { sid: cur, cn: SBY[cur].cn, view, src: uOf(view, cur) };
-  try { localStorage.setItem('orion.mech', JSON.stringify(m)); } catch (e) {}
+  lsSet('orion.mech', JSON.stringify(m));
   const b = $('#bConfirm'); if (b){ b.classList.add('ok'); b.textContent = '已选定 ✓ ' + m.cn; clearTimeout(b._t); b._t = setTimeout(() => { b.classList.remove('ok'); b.textContent = '选择此机甲'; }, 2200); }
   sfx(900);
   document.dispatchEvent(new CustomEvent('orion:mech', { detail: m }));
@@ -270,7 +276,7 @@ function init(){
 }
 function open(){
   init();
-  let s = null; try { s = localStorage.getItem('orion.pick'); } catch (e) {}
+  const s = lsGet('orion.pick');
   view = 'iso';   // 进入页面默认对角正交视角
   const host = $('#bFig'); host.innerHTML = ''; host.dataset.key = '';
   pick(SBY[s] ? s : IDS[0], true);
